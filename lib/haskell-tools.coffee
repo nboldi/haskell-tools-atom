@@ -25,8 +25,8 @@ module.exports = HaskellTools =
       'enable-haskell-tools-for-project-folder:toggle', (event) => @toggleDir(event)
 
     @subscriptions.add atom.config.onDidChange 'haskell-tools.refactored-packages', (change) => @checkDirs(change)
-    @markDirs()
-    @setupTreeListener()
+
+    @setupListeners()
 
 
   deactivate: ->
@@ -39,6 +39,7 @@ module.exports = HaskellTools =
     workspaceElement = atom.views.getView(atom.workspace)
     packages = atom.config.get('haskell-tools.refactored-packages')
     treeElems = workspaceElement.querySelectorAll('.tree-view .project-root-header .icon[data-path]')
+    console.log(treeElems)
     for treeElem in treeElems
       if treeElem.getAttribute('data-path') in packages
         treeElem.classList.add('ht-refactored')
@@ -69,10 +70,16 @@ module.exports = HaskellTools =
     for dir in change.oldValue
       if !(dir in change.newValue) then @setDir(dir, false)
 
+  setupListeners: () ->
+    @treeListener = new MutationObserver((mutations) => @markDirs(); @setupTreeListener());
+    panelContainers = atom.views.getView(atom.workspace).querySelectorAll('atom-panel-container')
+    for panelCont in panelContainers
+      @treeListener.observe(panelCont, { childList: true })
+
   setupTreeListener: () ->
-    @treeListener = new MutationObserver((mutations) => @markDirs());
-    treeView = atom.views.getView(atom.workspace).querySelectorAll('.tree-view')[0]
-    @treeListener.observe(treeView, { childList: true })
+    treeView = atom.views.getView(atom.workspace).querySelectorAll('.tree-view')
+    if treeView.length > 0
+      @treeListener.observe(treeView[0], { childList: true })
 
   refactor: (refactoring) ->
     atom.notifications.addInfo("Refactoring: RenameDefinition")
