@@ -1,0 +1,21 @@
+'menu': [
+  {
+    'label': 'Haskell'
+    'submenu': [
+      'label': 'Refactor'
+      'submenu': [
+        {
+          'label': 'Rename Definition'
+          'command': 'refactor:rename-definition'
+        }
+      ]
+    ]
+  }
+],
+'context-menu':
+  '.tree-view .project-root-header': [
+    {
+      'label': 'Toggle Haskell-tools Refactoring'
+      'command': 'enable-haskell-tools-for-project-folder:toggle'
+    }
+  ]
