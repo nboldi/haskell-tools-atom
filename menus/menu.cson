@@ -2,17 +2,19 @@
   {
     'label': 'Haskell'
     'submenu': [
-      'label': 'Refactor'
-      'submenu': [
-        {
-          'label': 'Rename Definition'
-          'command': 'refactor:rename-definition'
-        },
-        {
-          'label': 'Check connection'
-          'command': 'haskell-tools-check-conn'
-        }
-      ]
+      {
+        'label': 'Refactor'
+        'submenu': [
+          {
+            'label': 'Rename Definition'
+            'command': 'haskell-tools:refactor:rename-definition'
+          }
+          {
+            'label': 'Extract Binding'
+            'command': 'haskell-tools:refactor:extract-binding'
+          }
+        ]
+      }
     ]
   }
 ],
@@ -21,5 +23,6 @@
     {
       'label': 'Toggle Haskell-tools Refactoring'
       'command': 'enable-haskell-tools-for-project-folder:toggle'
-    }
+    },
+    {'type': 'separator'}
   ]
