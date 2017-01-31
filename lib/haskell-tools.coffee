@@ -1,8 +1,8 @@
 {CompositeDisposable} = require 'atom'
 net = require 'net'
-process = require 'child_process'
 pkgHandler = require './package-handler'
 exeLocator = require './exe-locator'
+serverManager = require './server-manager'
 
 module.exports = HaskellTools =
   subscriptions: null
@@ -12,6 +12,9 @@ module.exports = HaskellTools =
   port: 4123
 
   config:
+    'start-automatically':
+      type: 'boolean'
+      default: false
     'refactored-packages':
       type: 'array'
       default: []
@@ -38,23 +41,12 @@ module.exports = HaskellTools =
       'haskell-tools:refactor:extract-binding': => @refactor('ExtractBinding')
 
     pkgHandler.activate()
-
-    # subproc = process.spawn 'dir', [], {'shell': true}
-    # subproc.stdout.on('data', (data) =>
-    #   console.log('stdout: ' + data)
-    # );
-    #
-    # subproc.stderr.on('data', (data) =>
-    #   console.log('stderr: ' + data)
-    # );
-    #
-    # subproc.on('close', (code) =>
-    #   console.log('child process exited with code ' + code)
-    # );
+    serverManager.activate()
 
   deactivate: ->
     @subscriptions.dispose()
     pkgHandler.dispose()
+    serverManager.dispose()
 
   serialize: ->
 

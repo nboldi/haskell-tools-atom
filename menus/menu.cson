@@ -15,6 +15,18 @@
           }
         ]
       }
+      {
+        'label': 'Start Haskell Tools server'
+        'command': 'haskell-tools:start-server'
+      }
+      {
+        'label': 'Stop Haskell Tools server'
+        'command': 'haskell-tools:stop-server'
+      }
+      {
+        'label': 'Restart Haskell Tools server'
+        'command': 'haskell-tools:restart-server'
+      }
     ]
   }
 ],
@@ -22,7 +34,7 @@
   '.tree-view .project-root-header': [
     {
       'label': 'Toggle Haskell-tools Refactoring'
-      'command': 'enable-haskell-tools-for-project-folder:toggle'
+      'command': 'haskell-tools:toggle-package'
     },
     {'type': 'separator'}
   ]

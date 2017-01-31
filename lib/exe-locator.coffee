@@ -2,7 +2,6 @@ fs = require 'fs'
 path = require 'path'
 os = require 'os'
 
-
 module.exports = ExeLocator =
   locateExe: () ->
     daemonPath = atom.config.get("haskell-tools.daemon-path")
@@ -27,25 +26,3 @@ module.exports = ExeLocator =
     if !found
       atom.notifications.addInfo("Cannot automatically find ht-daemon executable. Select ht-daemon executable manually."
                                    + " If ht-daemon is not installed user 'cabal install ht-daemon'.")
-
-# walk: (dir, done) ->
-#   results: []
-#   fs.readdir dir, (err, list) =>
-#     if (err)
-#       done(err)
-#     else
-#       i = 0
-#       next: () ->
-#         file = list[i++];
-#         if (!file)
-#           done(null, results)
-#         else
-#           file = dir + '/' + file
-#           fs.stat file, (err, stat) =>
-#             if (stat && stat.isDirectory())
-#               walk file, (err, res) =>
-#                 results = results.concat(res)
-#                 next()
-#             else
-#               results.push(file)
-#               next()

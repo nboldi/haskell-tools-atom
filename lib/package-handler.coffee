@@ -8,7 +8,7 @@ module.exports = PackageHandler =
   activate: () ->
     @subscriptions = new CompositeDisposable
     @subscriptions.add atom.commands.add 'atom-workspace',
-      'enable-haskell-tools-for-project-folder:toggle', (event) => @toggleDir(event)
+      'haskell-tools:toggle-package', (event) => @toggleDir(event)
     @subscriptions.add atom.config.onDidChange 'haskell-tools.refactored-packages', (change) => @checkDirs(change)
     @setupListeners()
 
