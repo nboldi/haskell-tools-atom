@@ -1,8 +1,13 @@
 {CompositeDisposable} = require 'atom'
+net = require 'net'
 
 module.exports = HaskellTools =
   subscriptions: null
+  connection: null
   treeListener: null
+
+  domain: 'localhost'
+  port: 4123
 
   config:
     'refactored-packages':
@@ -19,7 +24,7 @@ module.exports = HaskellTools =
       'refactor:rename-definition': => @refactor('RenameDefinition')
 
     @subscriptions.add atom.commands.add 'atom-workspace',
-      'haskell-tools-info': => @info()
+      'haskell-tools-check-conn': => @info()
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'enable-haskell-tools-for-project-folder:toggle', (event) => @toggleDir(event)
@@ -39,7 +44,6 @@ module.exports = HaskellTools =
     workspaceElement = atom.views.getView(atom.workspace)
     packages = atom.config.get('haskell-tools.refactored-packages')
     treeElems = workspaceElement.querySelectorAll('.tree-view .project-root-header .icon[data-path]')
-    console.log(treeElems)
     for treeElem in treeElems
       if treeElem.getAttribute('data-path') in packages
         treeElem.classList.add('ht-refactored')
@@ -85,4 +89,13 @@ module.exports = HaskellTools =
     atom.notifications.addInfo("Refactoring: RenameDefinition")
 
   info: () ->
-    atom.notifications.addInfo(atom.project.getPaths())
+    @connection = net.createConnection @port, @domain
+    @connection.on 'connect', () =>
+      console.log "Opened connection to server"
+      @connection.write "Ping"
+
+    @connection.on 'data', (data) =>
+      console.log "Received: #{data}"
+
+    @connection.on 'end', (data) =>
+      console.log "Connection closed"

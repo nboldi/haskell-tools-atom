@@ -7,6 +7,10 @@
         {
           'label': 'Rename Definition'
           'command': 'refactor:rename-definition'
+        },
+        {
+          'label': 'Check connection'
+          'command': 'haskell-tools-check-conn'
         }
       ]
     ]
