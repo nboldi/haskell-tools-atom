@@ -2,6 +2,7 @@
 net = require 'net'
 process = require 'child_process'
 pkgHandler = require './package-handler'
+exeLocator = require './exe-locator'
 
 module.exports = HaskellTools =
   subscriptions: null
@@ -30,6 +31,8 @@ module.exports = HaskellTools =
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:refactor:rename-definition': => @refactor('RenameDefinition')
+
+    exeLocator.locateExe()
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:refactor:extract-binding': => @refactor('ExtractBinding')
