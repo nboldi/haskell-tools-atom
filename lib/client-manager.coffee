@@ -1,5 +1,6 @@
 {CompositeDisposable} = require 'atom'
 net = require 'net'
+RenameDialog = require './rename-dialog'
 
 module.exports = ClientManager =
   subscriptions: null
@@ -14,10 +15,20 @@ module.exports = ClientManager =
       'haskell-tools:check-server': => @checkServer()
 
     @subscriptions.add atom.commands.add 'atom-workspace',
-      'haskell-tools:refactor:rename-definition': => @refactor('RenameDefinition')
+      'haskell-tools:refactor:rename-definition', () => @refactor('RenameDefinition')
 
     @subscriptions.add atom.commands.add 'atom-workspace',
-      'haskell-tools:refactor:extract-binding': => @refactor('ExtractBinding')
+      'haskell-tools:refactor:extract-binding', () =>
+        editor = atom.workspace.getActivePaneItem()
+        if not editor
+          return
+        file = editor.buffer.file.path
+        range = editor.getSelectedBufferRange()
+
+        dialog = new RenameDialog
+        dialog.onSuccess ({answer}) =>
+          @refactor('ExtractBinding', file, range, [answer.text()])
+        dialog.attach()
 
     autoStart = atom.config.get("haskell-tools:start-automatically")
     if autoStart
@@ -61,10 +72,14 @@ module.exports = ClientManager =
     @stopped = true
     @client.destroy()
 
-  send: (msg) ->
+  send: (data) ->
     if @ready
-      @client.write msg
+      @client.write JSON.stringify(data)
     else atom.notifications.addError("Haskell-tools: Server is not ready")
 
   checkServer: () ->
-    @send '{"tag":"KeepAlive","contents":[]}'
+    @send {"tag":"KeepAlive","contents":[]}
+
+  refactor: (refactoring, file, range, params) ->
+    selection = "#{range.start.row}:#{range.start.column}-#{range.end.row}:#{range.end.column}"
+    @send { 'tag': 'PerformRefactoring', 'refactoring': refactoring, 'modulePath': file, 'editorSelection': selection, 'details': params }

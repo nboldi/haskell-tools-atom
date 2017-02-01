@@ -56,6 +56,7 @@ module.exports = ServerManager =
       # restart the server if it was not intentionally closed
       if @running
         @running = false
+        atom.notifications.addError("Unfortunately the server crashed.")
         @start()
     );
 

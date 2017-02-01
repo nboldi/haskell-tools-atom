@@ -36,6 +36,3 @@ module.exports = HaskellTools =
     pkgHandler.dispose()
 
   serialize: ->
-
-  refactor: (refactoring) ->
-    atom.notifications.addInfo("Refactoring: " + refactoring)
