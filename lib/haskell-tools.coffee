@@ -3,13 +3,13 @@ net = require 'net'
 pkgHandler = require './package-handler'
 exeLocator = require './exe-locator'
 serverManager = require './server-manager'
+clientManager = require './client-manager'
 
 module.exports = HaskellTools =
   subscriptions: null
   connection: null
 
   domain: 'localhost'
-  port: 4123
 
   config:
     'start-automatically':
