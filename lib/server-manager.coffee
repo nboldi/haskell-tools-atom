@@ -1,5 +1,6 @@
 {CompositeDisposable} = require 'atom'
 process = require 'child_process'
+clientManager = require './client-manager'
 
 module.exports = ServerManager =
   subproc: null
@@ -21,8 +22,10 @@ module.exports = ServerManager =
     autoStart = atom.config.get("haskell-tools:start-automatically")
     if autoStart
       @start()
+    clientManager.activate()
 
   dispose: () ->
+    clientManager.dispose()
     @stop()
     @subscriptions.dispose()
 
@@ -32,7 +35,6 @@ module.exports = ServerManager =
     @running = true
 
   start: () ->
-    console.log("start @running: " + @running)
     if @running
       atom.notifications.addInfo("Cannot start because Haskell Tools is already running.")
       return
@@ -52,16 +54,17 @@ module.exports = ServerManager =
     );
     @subproc.on('close', (code) =>
       # restart the server if it was not intentionally closed
-      console.log("terminated @running:"  + @running)
       if @running
         @running = false
         @start()
     );
 
+    clientManager.connect()
+
   stop: () ->
     if !@running
       atom.notifications.addInfo("Cannot stop because Haskell Tools is not running.")
       return
+    clientManager.disconnect()
     @running = false
-    console.log("stopped @running:"  + @running)
     @subproc.kill('SIGINT')

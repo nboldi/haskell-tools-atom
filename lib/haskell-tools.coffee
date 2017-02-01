@@ -1,9 +1,7 @@
-{CompositeDisposable} = require 'atom'
 net = require 'net'
 pkgHandler = require './package-handler'
 exeLocator = require './exe-locator'
 serverManager = require './server-manager'
-clientManager = require './client-manager'
 
 module.exports = HaskellTools =
   subscriptions: null
@@ -29,24 +27,13 @@ module.exports = HaskellTools =
 
   activate: (state) ->
     atom.notifications.addInfo("haskell-tools is started")
-    # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
-    @subscriptions = new CompositeDisposable
-
-    @subscriptions.add atom.commands.add 'atom-workspace',
-      'haskell-tools:refactor:rename-definition': => @refactor('RenameDefinition')
-
     exeLocator.locateExe()
-
-    @subscriptions.add atom.commands.add 'atom-workspace',
-      'haskell-tools:refactor:extract-binding': => @refactor('ExtractBinding')
-
     pkgHandler.activate()
     serverManager.activate()
 
   deactivate: ->
-    @subscriptions.dispose()
-    pkgHandler.dispose()
     serverManager.dispose()
+    pkgHandler.dispose()
 
   serialize: ->
 

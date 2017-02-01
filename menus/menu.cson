@@ -27,6 +27,10 @@
         'label': 'Restart Haskell Tools server'
         'command': 'haskell-tools:restart-server'
       }
+      {
+        'label': 'Check Haskell Tools server'
+        'command': 'haskell-tools:check-server'
+      }
     ]
   }
 ],
