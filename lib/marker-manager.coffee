@@ -90,11 +90,13 @@ module.exports = MarkerManager =
     decorator = gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
     marker
 
+  # TODO: clear all markers command in the menu
+
   removeAllMarkersFromFiles: (files) ->
     for file in files
       @removeAllMarkersFrom file
 
   removeAllMarkersFrom: (file) ->
     for markerReg in @markers[file] ? []
-      markerReg.marker.destroy()
+      markerReg.marker?.destroy()
     @markers[file] = []

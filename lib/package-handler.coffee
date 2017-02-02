@@ -15,7 +15,9 @@ module.exports = PackageHandler =
 
     @subscriptions.add atom.config.onDidChange 'haskell-tools.refactored-packages', (change) => @checkDirs(change)
 
-    @updateRegisteredPackages()
+    clientManager.onConnect () =>
+      @packagesRegistered = []
+      @updateRegisteredPackages()
     @setupListeners()
 
   dispose: () ->
@@ -46,7 +48,7 @@ module.exports = PackageHandler =
     if added then (packages.push(directoryPath) if !(directoryPath in packages)) else packages = packages.filter (d) -> d isnt directoryPath
     atom.config.set('haskell-tools.refactored-packages', packages)
     atom.notifications.addInfo("The folder " + directoryName + " have been " + (if added then "added to" else "removed from") + " Haskell Tools Refact")
-    @updateRegisteredPackages()
+    clientManager.whenReady () => @updateRegisteredPackages()
 
   toggleDir: (event) ->
     directoryPath = event.target.getAttribute('data-path')
@@ -63,6 +65,7 @@ module.exports = PackageHandler =
     # if the tree view is active, mark the selected packages
     @markDirs()
     # otherwise wait for the treeview to appear and then mark the packages
+    # TODO: simplify with jQuery
     @treeListener = new MutationObserver((mutations) => @markDirs(); @setupTreeListener());
     panelContainers = atom.views.getView(atom.workspace).querySelectorAll('atom-panel-container')
     for panelCont in panelContainers
@@ -74,13 +77,11 @@ module.exports = PackageHandler =
       @treeListener.observe(treeView[0], { childList: true })
 
   updateRegisteredPackages: () ->
-    # TODO: resend actual packages after reconnecting
-    clientManager.whenReady () =>
-      packages = atom.config.get('haskell-tools.refactored-packages') ? []
-      console.log('Registering packages to Haskell Tools: ' + packages)
-      newPackages = packages.filter (x) => not (x in @packagesRegistered)
-      removedPackages = @packagesRegistered.filter (x) => not (x in packages)
+    packages = atom.config.get('haskell-tools.refactored-packages') ? []
+    console.log('Registering packages to Haskell Tools: ' + packages)
+    newPackages = packages.filter (x) => not (x in @packagesRegistered)
+    removedPackages = @packagesRegistered.filter (x) => not (x in packages)
 
-      clientManager.addPackages(newPackages) if newPackages.length > 0
-      clientManager.removePackages(removedPackages) if removedPackages.length > 0
-      @packagesRegistered = packages
+    clientManager.addPackages(newPackages) if newPackages.length > 0
+    clientManager.removePackages(removedPackages) if removedPackages.length > 0
+    @packagesRegistered = packages

@@ -1,18 +1,17 @@
-{CompositeDisposable} = require 'atom'
+{CompositeDisposable, Emitter} = require 'atom'
 net = require 'net'
 NameDialog = require './name-dialog'
 markerManager = require './marker-manager'
 
 module.exports = ClientManager =
-  subscriptions: null
+  subscriptions: new CompositeDisposable
+  emitter: new Emitter
   client: null
   ready: false
   stopped: true
   jobs: []
 
   activate: () ->
-    @subscriptions = new CompositeDisposable
-
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:check-server': => @checkServer()
 
@@ -57,6 +56,9 @@ module.exports = ClientManager =
       'haskell-tools:refactor:generate-exports', () => @refactor 'GenerateExports'
 
     autoStart = atom.config.get("haskell-tools.start-automatically")
+
+    @emitter.on 'connect', () => @executeJobs()
+
     if autoStart
       @connect()
 
@@ -71,7 +73,7 @@ module.exports = ClientManager =
     @client.connect connectPort, '127.0.0.1', () =>
       console.log('ClientManager: Connected to Haskell Tools')
       @ready = true
-      @executeJobs()
+      @emitter.emit 'connect'
 
     @client.on 'data', (msg) =>
       str = msg.toString()
@@ -91,6 +93,7 @@ module.exports = ClientManager =
           console.error('Unrecognized response from server: ' + msg)
 
     @client.on 'close', () =>
+      @emitter.emit 'disconnect'
       if @stopped
         console.log('ClientManager: Connection closed intentionally.')
         return
@@ -98,6 +101,12 @@ module.exports = ClientManager =
       @ready = false
       callback = () => @connect()
       setTimeout callback, 1000
+
+  onConnect: (callback) ->
+    @emitter.on 'connect', callback
+
+  onDisconnect: (callback) ->
+    @emitter.on 'disconnect', callback
 
   whenReady: (job) ->
     if @ready
