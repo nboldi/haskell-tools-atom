@@ -13,6 +13,26 @@
             'label': 'Extract Binding'
             'command': 'haskell-tools:refactor:extract-binding'
           }
+          {
+            'label': 'Inline Binding'
+            'command': 'haskell-tools:refactor:inline-binding'
+          }
+          {
+            'label': 'Generate Type Signature'
+            'command': 'haskell-tools:refactor:generate-signature'
+          }
+          {
+            'label': 'Float Out'
+            'command': 'haskell-tools:refactor:float-out'
+          }
+          {
+            'label': 'Organize Imports'
+            'command': 'haskell-tools:refactor:organize-imports'
+          }
+          {
+            'label': 'Generate Exports'
+            'command': 'haskell-tools:refactor:generate-exports'
+          }
         ]
       }
       {

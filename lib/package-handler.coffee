@@ -1,15 +1,21 @@
 {CompositeDisposable} = require 'atom'
+clientManager = require './client-manager'
 
 # A module for handling the packages that are registered in the Haskell Tools framework.
 module.exports = PackageHandler =
   subscriptions: null
   treeListener: null
+  packagesRegistered: []
 
   activate: () ->
     @subscriptions = new CompositeDisposable
+
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:toggle-package', (event) => @toggleDir(event)
+
     @subscriptions.add atom.config.onDidChange 'haskell-tools.refactored-packages', (change) => @checkDirs(change)
+
+    @updateRegisteredPackages()
     @setupListeners()
 
   dispose: () ->
@@ -40,6 +46,7 @@ module.exports = PackageHandler =
     if added then (packages.push(directoryPath) if !(directoryPath in packages)) else packages = packages.filter (d) -> d isnt directoryPath
     atom.config.set('haskell-tools.refactored-packages', packages)
     atom.notifications.addInfo("The folder " + directoryName + " have been " + (if added then "added to" else "removed from") + " Haskell Tools Refact")
+    @updateRegisteredPackages()
 
   toggleDir: (event) ->
     directoryPath = event.target.getAttribute('data-path')
@@ -65,3 +72,14 @@ module.exports = PackageHandler =
     treeView = atom.views.getView(atom.workspace).querySelectorAll('.tree-view')
     if treeView.length > 0
       @treeListener.observe(treeView[0], { childList: true })
+
+  updateRegisteredPackages: () ->
+    clientManager.whenReady () =>
+      packages = atom.config.get('haskell-tools.refactored-packages') ? []
+      console.log('Registering packages to Haskell Tools: ' + packages)
+      newPackages = packages.filter (x) => not (x in @packagesRegistered)
+      removedPackages = @packagesRegistered.filter (x) => not (x in packages)
+
+      clientManager.addPackages(newPackages) if newPackages.length > 0
+      clientManager.removePackages(removedPackages) if removedPackages.length > 0
+      @packagesRegistered = packages
