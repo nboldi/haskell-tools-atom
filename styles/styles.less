@@ -1,3 +1,26 @@
+@import 'ui-variables';
+@import 'syntax-variables';
+@import 'octicon-utf-codes';
+
 .tree-view .ht-refactored.icon::before {
   color: green;
+}
+
+.editor .gutter[gutter-name='ht-problems'] {
+  width: 20px;
+}
+
+.editor .gutter .decoration.ht-comp-problem:before {
+  visibility: visible;
+  font-family: "Octicons Regular";
+  content: @alert;
+  color: @text-color-error;
+}
+
+@fadeOutRatio: 20%;
+.editor .highlights .highlight.ht-comp-problem .region {
+  visibility: visible;
+  border-bottom-style: dotted;
+  border-bottom-width: 1px;
+  border-bottom-color: @text-color-error; // fadeout(@text-color-error, @fadeOutRatio);
 }

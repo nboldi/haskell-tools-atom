@@ -8,6 +8,7 @@ module.exports = ClientManager =
   ready: false
   stopped: true
   jobs: []
+  editors: {}
 
   activate: () ->
     @subscriptions = new CompositeDisposable
@@ -16,6 +17,8 @@ module.exports = ClientManager =
       'haskell-tools:check-server': => @checkServer()
 
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
+      @editors[editor.buffer.file.path] = editor
+      editor.addGutter(name: 'ht-problems', priority: 10, visible: false)
       @subscriptions.add editor.onDidSave ({path}) =>
         packages = atom.config.get("haskell-tools.refactored-packages")
         for pack in packages
@@ -79,7 +82,7 @@ module.exports = ClientManager =
         when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
         when "ErrorMessage" then atom.notifications.addError data.errorMsg
         when "LoadedModules" then # TODO: readyness
-        when "CompilationProblem" then # TODO: display
+        when "CompilationProblem" then @putErrorMarkers(data.errorMarkers)
         when "ModulesChanged" then # changes automatically detected
         when "Disconnected" then # will reconnect if needed
         else
@@ -150,3 +153,13 @@ module.exports = ClientManager =
 
   reload: (changed, removed) ->
     @send { 'tag': 'ReLoad', 'changedModules': changed, 'removedModules': removed }
+
+  putErrorMarkers: (errorMarkers) ->
+    for [{startRow,startCol,endRow,endCol,file},text] in errorMarkers
+      rng = [[startRow - 1, startCol - 1], [endRow - 1, endCol - 1]]
+      editor = @editors[file]
+      marker = editor.markBufferRange rng
+      editor.decorateMarker(marker, type: 'highlight', class: 'ht-comp-problem')
+      gutter = editor.gutterWithName 'ht-problems'
+      gutter.show()
+      gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
