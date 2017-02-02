@@ -79,7 +79,7 @@ module.exports = ClientManager =
       switch data.tag
         when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
         when "ErrorMessage" then atom.notifications.addError data.errorMsg
-        when "LoadedModules" then markerManager.removeAllMarkersFrom(data.loadedModules)
+        when "LoadedModules" then markerManager.removeAllMarkersFromFiles(data.loadedModules)
         when "CompilationProblem" then markerManager.putErrorMarkers(data.errorMarkers)
         when "ModulesChanged" then # changes automatically detected
         when "Disconnected" then # will reconnect if needed

@@ -4,7 +4,6 @@
 module.exports = MarkerManager =
   editors: {}
   markers: []
-  tooltipsShowing: []
 
   activate: () ->
     @subscriptions = new CompositeDisposable
@@ -17,52 +16,67 @@ module.exports = MarkerManager =
       elem = $(event.target)
       if not elem.hasClass('ht-comp-problem')
         return
-      index = elem.index()
-      text = @markers[index]
+      marker = @getMarkerFromElem elem
       child = elem.children('.ht-tooltip')
       if child.length == 0
-        elem.append("<div class='ht-tooltip'>#{text}</div>")
-        child = elem.children('.ht-tooltip')
-        child.width(200 + Math.min(200, text.length * 2))
-        @tooltipsShowing[index] = { elem: child, timeout: null }
+        elem.append("<div class='ht-tooltip'>#{marker.text}</div>")
+        marker.elem = elem.children('.ht-tooltip')
+        marker.elem.width(200 + Math.min(200, marker.text.length * 2))
       else
         child.show()
-        @keepTooltip index
+        @keepTooltip elem
 
     $('atom-workspace').on 'mouseenter', '.editor .ht-comp-problem .ht-tooltip', (event) =>
-      @keepTooltip $(event.target).parent().index()
+      @keepTooltip $(event.target).parent()
 
     $('atom-workspace').on 'mouseout', '.editor .ht-comp-problem', (event) =>
-      @hideTooltip $(event.target).index()
+      @hideTooltip $(event.target).closest('.ht-comp-problem')
 
-    $('atom-workspace').on 'mouseout', '.editor .ht-comp-problem .ht-tooltip', (event) =>
-      @hideTooltip $(event.target).parent().index()
+  hideTooltip: (elem) ->
+    marker = @getMarkerFromElem elem
+    if marker.timeout then clearTimeout marker.timeout
+    hiding = () => marker.elem.hide()
+    marker.timeout = setTimeout hiding, 500
 
-  hideTooltip: (index) ->
-    showing = @tooltipsShowing[index]
-    if showing
-      if showing.timeout then clearTimeout showing.timeout
-      hiding = () => showing.elem.hide()
-      showing.timeout = setTimeout(hiding, 500)
-
-  keepTooltip: (index) ->
-    showing = @tooltipsShowing[index]
-    if showing && showing.timeout then clearTimeout showing.timeout
+  keepTooltip: (elem) ->
+    marker = @getMarkerFromElem elem
+    if marker.timeout then clearTimeout marker.timeout
 
   dispose: () ->
     $('atom-workspace').off()
     @subscriptions.dispose()
 
-  putErrorMarkers: (errorMarkers) ->
-    for [{startRow,startCol,endRow,endCol,file},text] in errorMarkers
-      rng = [[startRow - 1, startCol - 1], [endRow - 1, endCol - 1]]
-      editor = @editors[file]
-      marker = editor.markBufferRange rng
-      editor.decorateMarker(marker, type: 'highlight', class: 'ht-comp-problem')
-      gutter = editor.gutterWithName 'ht-problems'
-      gutter.show()
-      decorator = gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
-      @markers.push(text)
+  getMarkerFromElem: (elem) ->
+    @getMarker $(elem).closest('atom-pane').attr('data-active-item-path'), $(elem).index()
 
-  removeAllMarkersFrom: (files) ->
-    # TODO
+  getMarker: (file, index) ->
+    if @markers[file] then @markers[file][index] ? {} else {}
+
+  putErrorMarkers: (errorMarkers) ->
+    # remove every previous marker
+    for [{file},t] in errorMarkers
+      if @markers[file]
+        @removeAllMarkersFrom file
+    for marker in errorMarkers
+      @putMarker marker
+
+  putMarker: ([{startRow,startCol,endRow,endCol,file},text]) ->
+    rng = [[startRow - 1, startCol - 1], [endRow - 1, endCol - 1]]
+    editor = @editors[file]
+    marker = editor.markBufferRange rng
+    editor.decorateMarker(marker, type: 'highlight', class: 'ht-comp-problem')
+    gutter = editor.gutterWithName 'ht-problems'
+    gutter.show()
+    decorator = gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
+    if not @markers[file]
+      @markers[file] = []
+    @markers[file].push { text: text, marker: marker }
+
+  removeAllMarkersFromFiles: (files) ->
+    for file in files
+      @removeAllMarkersFrom file
+
+  removeAllMarkersFrom: (file) ->
+    for markerReg in @markers[file] ? []
+      markerReg.marker.destroy()
+    @markers[file] = []
