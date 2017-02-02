@@ -1,0 +1,8 @@
+'atom-text-editor:not([mini])[data-grammar~="haskell"]':
+  'alt-shift-s': 'haskell-tools:refactor:generate-signature'
+  'alt-shift-r': 'haskell-tools:refactor:rename-definition'
+  'alt-shift-b': 'haskell-tools:refactor:extract-binding'
+  'alt-shift-i': 'haskell-tools:refactor:inline-binding'
+  'alt-shift-f': 'haskell-tools:refactor:float-out'
+  'alt-shift-o': 'haskell-tools:refactor:organize-imports'
+  'alt-shift-e': 'haskell-tools:refactor:generate-exports'
