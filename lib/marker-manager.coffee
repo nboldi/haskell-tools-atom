@@ -5,12 +5,14 @@ module.exports = MarkerManager =
   editors: {}
   markers: []
 
+  # TODO: multiple editors for the same file
   activate: () ->
     @subscriptions = new CompositeDisposable
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
         @editors[editor.buffer.file.path] = editor
         editor.addGutter(name: 'ht-problems', priority: 10, visible: false)
-
+        editor.onDidDestroy () => @editors[editor.buffer.file.path] = null
+        @putMarkersOn editor
 
     $('atom-workspace').on 'mouseenter', '.editor .ht-comp-problem', (event) =>
       elem = $(event.target)
@@ -60,17 +62,32 @@ module.exports = MarkerManager =
     for marker in errorMarkers
       @putMarker marker
 
-  putMarker: ([{startRow,startCol,endRow,endCol,file},text]) ->
-    rng = [[startRow - 1, startCol - 1], [endRow - 1, endCol - 1]]
+  putMarker: ([details,text]) ->
+    file = details.file
     editor = @editors[file]
+    if not @markers[file]
+      @markers[file] = []
+    if editor
+      # editor is open
+      @putMarkerOn details, text
+      @markers[file].push { details: details, text: text, marker: marker }
+    else
+      # editor is not open
+      @markers[file].push { details: details, text: text }
+
+  putMarkersOn: (editor) ->
+    allMarkers = @markers[editor.buffer.file.path] ? []
+    for marker in allMarkers
+      @putMarkerOn editor, marker.details, marker.text
+
+  putMarkerOn: (editor, details, text) ->
+    {startRow,startCol,endRow,endCol} = details
+    rng = [[startRow - 1, startCol - 1], [endRow - 1, endCol - 1]]
     marker = editor.markBufferRange rng
     editor.decorateMarker(marker, type: 'highlight', class: 'ht-comp-problem')
     gutter = editor.gutterWithName 'ht-problems'
     gutter.show()
     decorator = gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
-    if not @markers[file]
-      @markers[file] = []
-    @markers[file].push { text: text, marker: marker }
 
   removeAllMarkersFromFiles: (files) ->
     for file in files
