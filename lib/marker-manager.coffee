@@ -69,7 +69,7 @@ module.exports = MarkerManager =
       @markers[file] = []
     if editor
       # editor is open
-      @putMarkerOn details, text
+      marker = @putMarkerOn editor, details, text
       @markers[file].push { details: details, text: text, marker: marker }
     else
       # editor is not open
@@ -88,6 +88,7 @@ module.exports = MarkerManager =
     gutter = editor.gutterWithName 'ht-problems'
     gutter.show()
     decorator = gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
+    marker
 
   removeAllMarkersFromFiles: (files) ->
     for file in files

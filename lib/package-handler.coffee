@@ -74,6 +74,7 @@ module.exports = PackageHandler =
       @treeListener.observe(treeView[0], { childList: true })
 
   updateRegisteredPackages: () ->
+    # TODO: resend actual packages after reconnecting
     clientManager.whenReady () =>
       packages = atom.config.get('haskell-tools.refactored-packages') ? []
       console.log('Registering packages to Haskell Tools: ' + packages)

@@ -74,8 +74,11 @@ module.exports = ClientManager =
       @executeJobs()
 
     @client.on 'data', (msg) =>
-      console.log('ClientManager: Received: ' + msg)
-      data = JSON.parse(msg)
+      str = msg.toString()
+      if str.match /^\s*$/
+        return
+      console.log('ClientManager: Received: ' + str)
+      data = JSON.parse(str)
       switch data.tag
         when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
         when "ErrorMessage" then atom.notifications.addError data.errorMsg
@@ -119,6 +122,7 @@ module.exports = ClientManager =
   send: (data) ->
     if @ready
       @client.write JSON.stringify(data)
+      @client.write '\n'
     else atom.notifications.addError("Haskell-tools: Server is not ready")
 
   checkServer: () ->
