@@ -1,3 +1,4 @@
+{$,jQuery} = require('atom-space-pen-views')
 {CompositeDisposable} = require 'atom'
 net = require 'net'
 NameDialog = require './name-dialog'
@@ -9,6 +10,8 @@ module.exports = ClientManager =
   stopped: true
   jobs: []
   editors: {}
+  markers: []
+  tooltipsShowing: []
 
   activate: () ->
     @subscriptions = new CompositeDisposable
@@ -57,6 +60,44 @@ module.exports = ClientManager =
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:refactor:generate-exports', () => @refactor 'GenerateExports'
+
+    $('atom-workspace').on 'mouseenter', '.editor .ht-comp-problem', (event) =>
+      elem = $(event.target)
+      if not elem.hasClass('ht-comp-problem')
+        return
+      index = elem.index()
+      console.log 'enter', index
+      text = @markers[index]
+      child = elem.children('.ht-tooltip')
+      if child.length == 0
+        elem.append("<div class='ht-tooltip'>#{text}</div>")
+        child = elem.children('.ht-tooltip')
+        child.width(200 + Math.min(200, text.length * 2))
+        @tooltipsShowing[index] = { elem: child, timeout: null }
+      else
+        child.show()
+        if @tooltipsShowing[index].timeout then clearTimeout @tooltipsShowing[index].timeout
+
+    $('atom-workspace').on 'mouseout', '.editor .ht-comp-problem', (event) =>
+      showing = @tooltipsShowing[$(event.target).index()]
+      console.log 'out', $(event.target).index()
+      if showing
+        if showing.timeout then clearTimeout showing.timeout
+        hiding = () => showing.elem.hide()
+        showing.timeout = setTimeout(hiding, 500)
+
+    $('atom-workspace').on 'mouseout', '.editor .ht-comp-problem .ht-tooltip', (event) =>
+      showing = @tooltipsShowing[$(event.target).parent().index()]
+      console.log 'tt out', $(event.target).parent().index()
+      if showing
+        if showing.timeout then clearTimeout showing.timeout
+        hiding = () => showing.elem.hide()
+        showing.timeout = setTimeout(hiding, 500)
+
+    $('atom-workspace').on 'mouseover', '.editor .ht-comp-problem .ht-tooltip', (event) =>
+      showing = @tooltipsShowing[$(event.target).parent().index()]
+      console.log 'tt enter', $(event.target).parent().index()
+      if showing && showing.timeout then clearTimeout showing.timeout
 
     autoStart = atom.config.get("haskell-tools.start-automatically")
     if autoStart
@@ -162,4 +203,8 @@ module.exports = ClientManager =
       editor.decorateMarker(marker, type: 'highlight', class: 'ht-comp-problem')
       gutter = editor.gutterWithName 'ht-problems'
       gutter.show()
-      gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
+      decorator = gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
+      @markers.push(text)
+
+      # callback = () -> console.log $('.editor .ht-comp-problem')
+      # setTimeout callback, 1000

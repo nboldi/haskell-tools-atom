@@ -17,10 +17,27 @@
   color: @text-color-error;
 }
 
-@fadeOutRatio: 20%;
+.editor .gutter[gutter-name='ht-problems'] {
+  overflow: visible;
+  z-index: 2;
+}
+
 .editor .highlights .highlight.ht-comp-problem .region {
   visibility: visible;
   border-bottom-style: dotted;
   border-bottom-width: 1px;
-  border-bottom-color: @text-color-error; // fadeout(@text-color-error, @fadeOutRatio);
+  border-bottom-color: @text-color-error;
+}
+
+.ht-comp-problem .ht-tooltip {
+  position: absolute;
+  text-align: left;
+  left: 0px;
+  background-color: @tree-view-background-color;
+  border-color: @tree-view-border-color;
+  border-width: thin;
+  border-style: solid;
+  padding: 5px;
+  paddig-left: 10px;
+  z-index: 3;
 }
