@@ -2,6 +2,7 @@ net = require 'net'
 pkgHandler = require './package-handler'
 exeLocator = require './exe-locator'
 serverManager = require './server-manager'
+markerManager = require './marker-manager'
 
 module.exports = HaskellTools =
   subscriptions: null
@@ -29,10 +30,12 @@ module.exports = HaskellTools =
     atom.notifications.addInfo("haskell-tools is started")
     exeLocator.locateExe()
     pkgHandler.activate()
+    markerManager.activate()
     serverManager.activate()
 
   deactivate: ->
     serverManager.dispose()
+    markerManager.dispose()
     pkgHandler.dispose()
 
   serialize: ->

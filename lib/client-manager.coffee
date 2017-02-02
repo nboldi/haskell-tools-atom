@@ -1,7 +1,7 @@
-{$,jQuery} = require('atom-space-pen-views')
 {CompositeDisposable} = require 'atom'
 net = require 'net'
 NameDialog = require './name-dialog'
+markerManager = require './marker-manager'
 
 module.exports = ClientManager =
   subscriptions: null
@@ -9,9 +9,6 @@ module.exports = ClientManager =
   ready: false
   stopped: true
   jobs: []
-  editors: {}
-  markers: []
-  tooltipsShowing: []
 
   activate: () ->
     @subscriptions = new CompositeDisposable
@@ -20,8 +17,6 @@ module.exports = ClientManager =
       'haskell-tools:check-server': => @checkServer()
 
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
-      @editors[editor.buffer.file.path] = editor
-      editor.addGutter(name: 'ht-problems', priority: 10, visible: false)
       @subscriptions.add editor.onDidSave ({path}) =>
         packages = atom.config.get("haskell-tools.refactored-packages")
         for pack in packages
@@ -61,44 +56,6 @@ module.exports = ClientManager =
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:refactor:generate-exports', () => @refactor 'GenerateExports'
 
-    $('atom-workspace').on 'mouseenter', '.editor .ht-comp-problem', (event) =>
-      elem = $(event.target)
-      if not elem.hasClass('ht-comp-problem')
-        return
-      index = elem.index()
-      console.log 'enter', index
-      text = @markers[index]
-      child = elem.children('.ht-tooltip')
-      if child.length == 0
-        elem.append("<div class='ht-tooltip'>#{text}</div>")
-        child = elem.children('.ht-tooltip')
-        child.width(200 + Math.min(200, text.length * 2))
-        @tooltipsShowing[index] = { elem: child, timeout: null }
-      else
-        child.show()
-        if @tooltipsShowing[index].timeout then clearTimeout @tooltipsShowing[index].timeout
-
-    $('atom-workspace').on 'mouseout', '.editor .ht-comp-problem', (event) =>
-      showing = @tooltipsShowing[$(event.target).index()]
-      console.log 'out', $(event.target).index()
-      if showing
-        if showing.timeout then clearTimeout showing.timeout
-        hiding = () => showing.elem.hide()
-        showing.timeout = setTimeout(hiding, 500)
-
-    $('atom-workspace').on 'mouseout', '.editor .ht-comp-problem .ht-tooltip', (event) =>
-      showing = @tooltipsShowing[$(event.target).parent().index()]
-      console.log 'tt out', $(event.target).parent().index()
-      if showing
-        if showing.timeout then clearTimeout showing.timeout
-        hiding = () => showing.elem.hide()
-        showing.timeout = setTimeout(hiding, 500)
-
-    $('atom-workspace').on 'mouseover', '.editor .ht-comp-problem .ht-tooltip', (event) =>
-      showing = @tooltipsShowing[$(event.target).parent().index()]
-      console.log 'tt enter', $(event.target).parent().index()
-      if showing && showing.timeout then clearTimeout showing.timeout
-
     autoStart = atom.config.get("haskell-tools.start-automatically")
     if autoStart
       @connect()
@@ -122,8 +79,8 @@ module.exports = ClientManager =
       switch data.tag
         when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
         when "ErrorMessage" then atom.notifications.addError data.errorMsg
-        when "LoadedModules" then # TODO: readyness
-        when "CompilationProblem" then @putErrorMarkers(data.errorMarkers)
+        when "LoadedModules" then markerManager.removeAllMarkersFrom(data.loadedModules)
+        when "CompilationProblem" then markerManager.putErrorMarkers(data.errorMarkers)
         when "ModulesChanged" then # changes automatically detected
         when "Disconnected" then # will reconnect if needed
         else
@@ -194,17 +151,3 @@ module.exports = ClientManager =
 
   reload: (changed, removed) ->
     @send { 'tag': 'ReLoad', 'changedModules': changed, 'removedModules': removed }
-
-  putErrorMarkers: (errorMarkers) ->
-    for [{startRow,startCol,endRow,endCol,file},text] in errorMarkers
-      rng = [[startRow - 1, startCol - 1], [endRow - 1, endCol - 1]]
-      editor = @editors[file]
-      marker = editor.markBufferRange rng
-      editor.decorateMarker(marker, type: 'highlight', class: 'ht-comp-problem')
-      gutter = editor.gutterWithName 'ht-problems'
-      gutter.show()
-      decorator = gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
-      @markers.push(text)
-
-      # callback = () -> console.log $('.editor .ht-comp-problem')
-      # setTimeout callback, 1000
