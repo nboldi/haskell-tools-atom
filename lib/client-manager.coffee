@@ -11,7 +11,6 @@ module.exports = ClientManager =
   ready: false
   stopped: true
   jobs: []
-  cursorPos: null
 
   activate: () ->
     @subscriptions.add atom.commands.add 'atom-workspace',

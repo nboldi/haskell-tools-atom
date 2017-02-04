@@ -2,6 +2,7 @@
 
 module.exports = CursorManager =
   subscriptions: new CompositeDisposable
+  cursorPos: null
 
   activate: () ->
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
