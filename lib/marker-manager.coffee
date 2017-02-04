@@ -8,6 +8,7 @@ module.exports = MarkerManager =
   # TODO: multiple editors for the same file
   activate: () ->
     @subscriptions = new CompositeDisposable
+    # TODO: if editor changes path, marker manager should recognize it
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
         @editors[editor.buffer.file.path] = editor
         editor.addGutter(name: 'ht-problems', priority: 10, visible: false)

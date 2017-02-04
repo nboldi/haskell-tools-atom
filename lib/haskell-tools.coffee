@@ -3,6 +3,7 @@ pkgHandler = require './package-handler'
 exeLocator = require './exe-locator'
 serverManager = require './server-manager'
 markerManager = require './marker-manager'
+cursorManager = require './cursor-manager'
 
 module.exports = HaskellTools =
   subscriptions: null
@@ -35,8 +36,10 @@ module.exports = HaskellTools =
     pkgHandler.activate()
     markerManager.activate()
     serverManager.activate()
+    cursorManager.activate()
 
   deactivate: ->
+    cursorManager.dispose()
     serverManager.dispose()
     markerManager.dispose()
     pkgHandler.dispose()
