@@ -2,6 +2,7 @@
 net = require 'net'
 NameDialog = require './name-dialog'
 markerManager = require './marker-manager'
+logger = require './logger'
 
 module.exports = ClientManager =
   subscriptions: new CompositeDisposable
@@ -71,7 +72,7 @@ module.exports = ClientManager =
     connectPort = atom.config.get("haskell-tools.connect-port")
 
     @client.connect connectPort, '127.0.0.1', () =>
-      console.log('ClientManager: Connected to Haskell Tools')
+      logger.log('ClientManager: Connected to Haskell Tools')
       @ready = true
       @emitter.emit 'connect'
 
@@ -79,7 +80,7 @@ module.exports = ClientManager =
       str = msg.toString()
       if str.match /^\s*$/
         return
-      console.log('ClientManager: Received: ' + str)
+      logger.log('ClientManager: Received: ' + str)
       data = JSON.parse(str)
       switch data.tag
         when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
@@ -90,14 +91,14 @@ module.exports = ClientManager =
         when "Disconnected" then # will reconnect if needed
         else
           atom.notifications.addError 'Internal error: Unrecognized response'
-          console.error('Unrecognized response from server: ' + msg)
+          logger.error('Unrecognized response from server: ' + msg)
 
     @client.on 'close', () =>
       @emitter.emit 'disconnect'
       if @stopped
-        console.log('ClientManager: Connection closed intentionally.')
+        logger.log('ClientManager: Connection closed intentionally.')
         return
-      console.log('ClientManager: Connection closed. Reconnecting after 1s')
+      logger.log('ClientManager: Connection closed. Reconnecting after 1s')
       @ready = false
       callback = () => @connect()
       setTimeout callback, 1000

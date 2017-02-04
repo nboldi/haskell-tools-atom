@@ -1,6 +1,7 @@
 {CompositeDisposable} = require 'atom'
 process = require 'child_process'
 clientManager = require './client-manager'
+logger = require './logger'
 
 module.exports = ServerManager =
   subproc: null
@@ -47,10 +48,10 @@ module.exports = ServerManager =
     # set verbose mode and channel log messages to our log here
     @subproc = process.spawn daemonPath, [connectPort, 'False']
     @subproc.stdout.on('data', (data) =>
-      console.log('Haskell Tools: ' + data)
+      logger.log('Haskell Tools: ' + data)
     );
     @subproc.stderr.on('data', (data) =>
-      console.error('Haskell Tools: ' + data)
+      logger.error('Haskell Tools: ' + data)
     );
     @subproc.on('close', (code) =>
       # restart the server if it was not intentionally closed

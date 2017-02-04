@@ -25,6 +25,9 @@ module.exports = HaskellTools =
     'daemon-path':
       type: 'string'
       default: '<autodetect>'
+    'debug-mode':
+      type: 'boolean'
+      default: 'false'
 
   activate: (state) ->
     atom.notifications.addInfo("haskell-tools is started")

@@ -1,5 +1,6 @@
 {CompositeDisposable} = require 'atom'
 clientManager = require './client-manager'
+logger = require './logger'
 
 # A module for handling the packages that are registered in the Haskell Tools framework.
 module.exports = PackageHandler =
@@ -78,7 +79,7 @@ module.exports = PackageHandler =
 
   updateRegisteredPackages: () ->
     packages = atom.config.get('haskell-tools.refactored-packages') ? []
-    console.log('Registering packages to Haskell Tools: ' + packages)
+    logger.log('Registering packages to Haskell Tools: ' + packages)
     newPackages = packages.filter (x) => not (x in @packagesRegistered)
     removedPackages = @packagesRegistered.filter (x) => not (x in packages)
 
