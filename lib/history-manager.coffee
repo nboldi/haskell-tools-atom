@@ -10,6 +10,10 @@ module.exports = HistoryManager =
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:undo-refactoring': => @undoRefactoring()
 
+    @subscriptions.add atom.workspace.observeTextEditors (editor) =>
+      @subscriptions.add editor.onDidSave ({path}) =>
+        @undoStack = []
+
   onUndo: (callback) ->
     @emitter.on 'undo', callback
 
