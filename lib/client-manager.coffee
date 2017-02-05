@@ -3,6 +3,7 @@ net = require 'net'
 NameDialog = require './name-dialog'
 markerManager = require './marker-manager'
 logger = require './logger'
+history = require './history-manager'
 
 module.exports = ClientManager =
   subscriptions: new CompositeDisposable
@@ -13,6 +14,9 @@ module.exports = ClientManager =
   jobs: []
 
   activate: () ->
+    history.activate()
+    history.onUndo ([changed, removed]) => @reload changed, removed
+
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:check-server': => @checkServer()
 
@@ -87,7 +91,7 @@ module.exports = ClientManager =
         when "ErrorMessage" then atom.notifications.addError data.errorMsg
         when "LoadedModules" then markerManager.removeAllMarkersFromFiles(data.loadedModules)
         when "CompilationProblem" then markerManager.putErrorMarkers(data.errorMarkers)
-        when "ModulesChanged" then # changes automatically detected
+        when "ModulesChanged" then history.registerUndo(data.undoChanges)
         when "Disconnected" then # will reconnect if needed
         else
           atom.notifications.addError 'Internal error: Unrecognized response'
@@ -123,6 +127,7 @@ module.exports = ClientManager =
   dispose: () ->
     @disconnect()
     @subscriptions.dispose()
+    history.dispose()
 
   disconnect: () ->
     @ready = false

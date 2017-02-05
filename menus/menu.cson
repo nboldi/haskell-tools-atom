@@ -51,6 +51,10 @@
         'label': 'Check Haskell Tools server'
         'command': 'haskell-tools:check-server'
       }
+      {
+        'label': 'Undo last refactoring'
+        'command': 'haskell-tools:undo-refactoring'
+      }
     ]
   }
 ],

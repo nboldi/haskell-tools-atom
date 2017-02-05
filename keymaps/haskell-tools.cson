@@ -6,3 +6,4 @@
   'alt-shift-f': 'haskell-tools:refactor:float-out'
   'alt-shift-o': 'haskell-tools:refactor:organize-imports'
   'alt-shift-e': 'haskell-tools:refactor:generate-exports'
+  'alt-shift-z': 'haskell-tools:undo-refactoring'
