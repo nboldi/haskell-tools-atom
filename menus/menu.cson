@@ -59,7 +59,7 @@
   }
 ],
 'context-menu':
-  '.tree-view .project-root-header': [
+  '.tree-view .header': [
     {
       'label': 'Toggle Haskell-tools Refactoring'
       'command': 'haskell-tools:toggle-package'

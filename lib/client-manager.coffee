@@ -13,6 +13,7 @@ module.exports = ClientManager =
   ready: false
   stopped: true
   jobs: []
+  incomingMsg: ''
 
   activate: () ->
     statusBar.activate()
@@ -83,26 +84,31 @@ module.exports = ClientManager =
       @emitter.emit 'connect'
 
     @client.on 'data', (msg) =>
-      str = msg.toString()
+      str = @incomingMsg + msg.toString()
       if str.match /^\s*$/
         return
       logger.log('ClientManager: Received: ' + str)
-      data = JSON.parse(str)
-      switch data.tag
-        when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
-        when "ErrorMessage" then atom.notifications.addError data.errorMsg
-        when "LoadedModules"
-          markerManager.removeAllMarkersFromFiles data.loadedModules
-          statusBar.loadedData data.loadedModules
-        when "LoadingModules" then statusBar.willLoadData data.modulesToLoad
-        when "CompilationProblem"
-          markerManager.putErrorMarkers(data.errorMarkers)
-          statusBar.compilationProblem()
-        when "ModulesChanged" then history.registerUndo(data.undoChanges)
-        when "Disconnected" then # will reconnect if needed
-        else
-          atom.notifications.addError 'Internal error: Unrecognized response'
-          logger.error('Unrecognized response from server: ' + msg)
+      try
+        data = JSON.parse(str)
+        @incomingMsg = ''
+        switch data.tag
+          when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
+          when "ErrorMessage" then atom.notifications.addError data.errorMsg
+          when "LoadedModules"
+            markerManager.removeAllMarkersFromFiles data.loadedModules
+            statusBar.loadedData data.loadedModules
+          when "LoadingModules" then statusBar.willLoadData data.modulesToLoad
+          when "CompilationProblem"
+            markerManager.putErrorMarkers(data.errorMarkers)
+            statusBar.compilationProblem()
+          when "ModulesChanged" then history.registerUndo(data.undoChanges)
+          when "Disconnected" then # will reconnect if needed
+          else
+            atom.notifications.addError 'Internal error: Unrecognized response'
+            logger.error('Unrecognized response from server: ' + msg)
+      catch error
+        # probably not the whole message is received
+        @incomingMsg = str
 
     @client.on 'close', () =>
       @emitter.emit 'disconnect'

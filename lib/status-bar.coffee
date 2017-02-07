@@ -22,12 +22,14 @@ module.exports = StatusBar =
 
   willLoadData: (mods) ->
     @remaining = mods.length
+    @done = 0
     @setStatus "Reloading: 0/#{@remaining}"
 
   loadedData: (mods) ->
     @done += mods.length
+    last = mods[mods.length-1] ? ''
     if @done >= @remaining then @setStatus "Ready"
-    else @setStatus "Reloading: #{@done}/#{@remaining}"
+    else @setStatus "Load (#{@done}/#{@remaining}): #{last[1]}"
 
   setStatus: (text) ->
     @message.text(text)

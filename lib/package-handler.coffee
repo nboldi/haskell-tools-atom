@@ -1,3 +1,4 @@
+{$} = require('atom-space-pen-views')
 {CompositeDisposable} = require 'atom'
 clientManager = require './client-manager'
 logger = require './logger'
@@ -27,21 +28,17 @@ module.exports = PackageHandler =
 
   # Mark the directories in the tree view, that are added to Haskell Tools with the class .ht-refactored
   markDirs: () ->
-    workspaceElement = atom.views.getView(atom.workspace)
     packages = atom.config.get('haskell-tools.refactored-packages')
-    treeElems = workspaceElement.querySelectorAll('.tree-view .project-root-header .icon[data-path]')
-    for treeElem in treeElems
-      if treeElem.getAttribute('data-path') in packages
-        treeElem.classList.add('ht-refactored')
+    $('.tree-view .header .icon[data-path]').each (i,elem) =>
+      if $(elem).attr('data-path') in packages
+        $(elem).addClass('ht-refactored')
 
   # Register or unregister the given directory in the Haskell Tools framework. This perform both the registration and the associated view changes.
   setDir: (directoryPath, added) ->
     # update the view
-    workspaceElement = atom.views.getView(atom.workspace)
-    treeElems = workspaceElement.querySelectorAll('.tree-view .project-root-header .icon[data-path="' + directoryPath.replace(/\\/g, "\\\\") + '"]')
-    for treeElem in treeElems
-      if treeElem.classList.contains('ht-refactored') != added
-        treeElem.classList.toggle('ht-refactored')
+    $('.tree-view .header .icon[data-path="' + directoryPath.replace(/\\/g, "\\\\") + '"]').each (i,elem) =>
+      if $(elem).hasClass('ht-refactored') != added
+        $(elem).toggleClass 'ht-refactored'
 
     pathSegments = directoryPath.split /\\|\//
     directoryName = pathSegments[pathSegments.length-1]
@@ -52,7 +49,7 @@ module.exports = PackageHandler =
     clientManager.whenReady () => @updateRegisteredPackages()
 
   toggleDir: (event) ->
-    directoryPath = event.target.getAttribute('data-path')
+    directoryPath = $(event.target).attr('data-path')
     packages = atom.config.get('haskell-tools.refactored-packages')
     @setDir(directoryPath, !(directoryPath in packages))
 
@@ -66,7 +63,6 @@ module.exports = PackageHandler =
     # if the tree view is active, mark the selected packages
     @markDirs()
     # otherwise wait for the treeview to appear and then mark the packages
-    # TODO: simplify with jQuery
     @treeListener = new MutationObserver((mutations) => @markDirs(); @setupTreeListener());
     panelContainers = atom.views.getView(atom.workspace).querySelectorAll('atom-panel-container')
     for panelCont in panelContainers
