@@ -1,6 +1,7 @@
 {CompositeDisposable,Emitter} = require 'atom'
 fs = require 'fs'
 
+# Keeps track of performed refactorings.
 module.exports = HistoryManager =
   undoStack: []
   emitter: new Emitter
@@ -11,12 +12,19 @@ module.exports = HistoryManager =
       'haskell-tools:undo-refactoring': => @undoRefactoring()
 
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
+      # TODO: Currently refactor and normal undo stack is not interleaved.
+      # If they were, we won't have to delete the refactor history on every save.
       @subscriptions.add editor.onDidSave ({path}) =>
         @undoStack = []
 
+  # The callback is activated when a refactoring is undone.
+  # The callback receives [changed, removed] where changed is the
+  # array of changed file names, removed is the array of removed file names
   onUndo: (callback) ->
     @emitter.on 'undo', callback
 
+  # Takes back the last refactoring performed. Uses the undo instructions
+  # sent by the server.
   undoRefactoring: () ->
     changed = []
     removed = []
@@ -44,6 +52,7 @@ module.exports = HistoryManager =
            changed.push undo.undoChangedPath
     @emitter.emit 'undo', [changed, removed]
 
+  # Saves the instructions to undo the last refactoring.
   registerUndo: (undo) -> @undoStack.push undo
 
   dispose: () ->

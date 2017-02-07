@@ -5,12 +5,9 @@ serverManager = require './server-manager'
 markerManager = require './marker-manager'
 cursorManager = require './cursor-manager'
 
+# Main module for the plugin. Contains the packages configuration and
+# activates/deactivates other modules.
 module.exports = HaskellTools =
-  subscriptions: null
-  connection: null
-
-  domain: 'localhost'
-
   config:
     'start-automatically':
       type: 'boolean'
@@ -43,5 +40,3 @@ module.exports = HaskellTools =
     serverManager.dispose()
     markerManager.dispose()
     pkgHandler.dispose()
-
-  serialize: ->

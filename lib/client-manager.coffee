@@ -6,6 +6,8 @@ logger = require './logger'
 history = require './history-manager'
 statusBar = require './status-bar'
 
+# The component that is responsible for maintaining the connection with
+# the server.
 module.exports = ClientManager =
   subscriptions: new CompositeDisposable
   emitter: new Emitter
@@ -70,6 +72,7 @@ module.exports = ClientManager =
     if autoStart
       @connect()
 
+  # Connect to the server. Should not be colled while the connection is alive.
   connect: () ->
     if @ready
       return # already connected
@@ -101,6 +104,7 @@ module.exports = ClientManager =
       callback = () => @connect()
       setTimeout callback, 1000
 
+  # Process an incoming message
   handleMsg: (str) ->
     try
       data = JSON.parse(str)
@@ -113,7 +117,7 @@ module.exports = ClientManager =
           statusBar.loadedData data.loadedModules
         when "LoadingModules" then statusBar.willLoadData data.modulesToLoad
         when "CompilationProblem"
-          markerManager.putErrorMarkers(data.errorMarkers)
+          markerManager.setErrorMarkers(data.errorMarkers)
           statusBar.compilationProblem()
         when "ModulesChanged" then history.registerUndo(data.undoChanges)
         when "Disconnected" then # will reconnect if needed
@@ -124,17 +128,21 @@ module.exports = ClientManager =
       # probably not the whole message is received
       @incomingMsg = str
 
+  # Registers a callback to trigger when the connection is established/restored
   onConnect: (callback) ->
     @emitter.on 'connect', callback
 
+  # Registers a callback to trigger when the connection is lost
   onDisconnect: (callback) ->
     @emitter.on 'disconnect', callback
 
+  # Execute the given job when thes connection is ready
   whenReady: (job) ->
     if @ready
       job()
     else @jobs.push(job)
 
+  # Perform the jobs that are scheduled for execution
   executeJobs: () ->
     jobsToDo = @jobs
     @jobs = []
@@ -147,16 +155,20 @@ module.exports = ClientManager =
     history.dispose()
     statusBar.dispose()
 
+  # Disconnect from the server
   disconnect: () ->
     @ready = false
     @stopped = true
     @client.destroy()
 
+  # Send a command to the server via JSON
   send: (data) ->
     if @ready
       @client.write JSON.stringify(data)
       @client.write '\n'
     else atom.notifications.addError("Haskell-tools: Server is not ready")
+
+  # These functions send commands to the server on user
 
   checkServer: () ->
     @send {"tag":"KeepAlive","contents":[]}

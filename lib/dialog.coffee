@@ -1,5 +1,6 @@
 {View} = require 'space-pen'
 
+# A base class for our dialogs.
 module.exports = class Dialog extends View
   constructor: () ->
     super

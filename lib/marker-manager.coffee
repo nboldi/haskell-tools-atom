@@ -1,6 +1,7 @@
 {CompositeDisposable} = require 'atom'
 {$} = require('atom-space-pen-views')
 
+# Controls how error markers are registered and displayed when
 module.exports = MarkerManager =
   editors: {}
   markers: []
@@ -10,13 +11,17 @@ module.exports = MarkerManager =
     @subscriptions = new CompositeDisposable
     # TODO: if editor changes path, marker manager should recognize it
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
+      if editor.buffer.file
         @editors[editor.buffer.file.path] = editor
         editor.addGutter(name: 'ht-problems', priority: 10, visible: false)
         editor.onDidDestroy () => @editors[editor.buffer.file.path] = null
         @putMarkersOn editor
 
     # Showing tooltips when hovering over the markers
-    # Note: I wanted to show these on
+    # Note: I wanted to show these on the marked source code fragment but the
+    # highlight is below the text, and placing it above cause visual problems.
+    # This could be solved by a mouseover on the whole editor and checking if
+    # the mouse is actually over a problem, but this seems to overdo the job.
     # TODO: hide all tooltips when one is shown. (Cancel timers as well)
     $('atom-workspace').on 'mouseenter', '.editor .ht-comp-problem', (event) =>
       elem = $(event.target)
@@ -38,12 +43,14 @@ module.exports = MarkerManager =
     $('atom-workspace').on 'mouseout', '.editor .ht-comp-problem', (event) =>
       @hideTooltip $(event.target).closest('.ht-comp-problem')
 
+  # Hides the corresponding tooltip after a given time interval.
   hideTooltip: (elem) ->
     marker = @getMarkerFromElem elem
     if marker.timeout then clearTimeout marker.timeout
     hiding = () => marker.elem.hide()
     marker.timeout = setTimeout hiding, 500
 
+  # Prevents the tooltip from being hidden
   keepTooltip: (elem) ->
     marker = @getMarkerFromElem elem
     if marker.timeout then clearTimeout marker.timeout
@@ -52,13 +59,17 @@ module.exports = MarkerManager =
     $('atom-workspace').off()
     @subscriptions.dispose()
 
+  # Gets the marker for a given marker based on the containing editor and the
+  # position of the marker inside the file.
   getMarkerFromElem: (elem) ->
     @getMarker $(elem).closest('atom-pane').attr('data-active-item-path'), $(elem).index()
 
+  # Get the nth marker in a given file.
   getMarker: (file, index) ->
     if @markers[file] then @markers[file][index] ? {} else {}
 
-  putErrorMarkers: (errorMarkers) ->
+  # Register the given error markers and remove already existing
+  setErrorMarkers: (errorMarkers) ->
     # remove every previous marker
     for [{file},t] in errorMarkers
       if @markers[file]
@@ -66,6 +77,7 @@ module.exports = MarkerManager =
     for marker in errorMarkers
       @putMarker marker
 
+  # Registers the given error marker, shows if possible
   putMarker: ([details,text]) ->
     file = details.file
     editor = @editors[file]
@@ -82,11 +94,13 @@ module.exports = MarkerManager =
       # editor is not open
       @markers[file].push { details: details, text: text }
 
+  # Show registered error markers on the given editor.
   putMarkersOn: (editor) ->
     allMarkers = @markers[editor.buffer.file.path] ? []
     for marker in allMarkers
       @putMarkerOn editor, marker.details, marker.text
 
+  # Shows the given error marker on a given editor
   putMarkerOn: (editor, details, text) ->
     {startRow,startCol,endRow,endCol} = details
     rng = [[startRow - 1, startCol - 1], [endRow - 1, endCol - 1]]
@@ -99,8 +113,8 @@ module.exports = MarkerManager =
 
   # TODO: clear all markers command in the menu
 
+  # Deregisters and removes all markers that are in a given file.
   removeAllMarkersFromFiles: (files) ->
-    console.log files
     $('.tree-view .icon[data-path]').each (i,elem) =>
       if $(elem).attr('data-path') in (files.map ([fn,mn]) -> fn)
         $(elem).removeClass 'ht-tree-error'
@@ -116,6 +130,7 @@ module.exports = MarkerManager =
     for [file,mn] in files
       @removeAllMarkersFrom file
 
+  # Removes all error markers from a file
   removeAllMarkersFrom: (file) ->
     for markerReg in @markers[file] ? []
       markerReg.marker?.destroy()

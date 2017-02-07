@@ -1,5 +1,7 @@
 {$} = require('atom-space-pen-views')
 
+# The module responsible for informing the user about the servers status
+# using the status bar.
 module.exports = StatusBar =
   remaining: 0
   done: 0
@@ -11,20 +13,25 @@ module.exports = StatusBar =
               </div>").appendTo context
     @message = $("<span class='ht-message'>Starting</span>").appendTo @node
 
+  # When packages are added display that the server is working on registering them.
   addPackages: () ->
     @setStatus 'Calculating'
 
+  # When a refactoring is performed notify the user that it is being done.
   performRefactoring: () ->
     @setStatus 'Refactoring'
 
+  # When a compilation problem is found, tell the user about it.
   compilationProblem: () ->
     @setStatus 'Compilation problem'
 
+  # Show the user how many modules are needed to be loaded.
   willLoadData: (mods) ->
-    @remaining = mods.length
+    @remaining = mods.filter((p) -> not p.endsWith('.hs-boot')).length
     @done = 0
     @setStatus "Reloading: 0/#{@remaining}"
 
+  # Inform the user that a given module has been loaded.
   loadedData: (mods) ->
     @done += mods.length
     last = mods[mods.length-1] ? ''

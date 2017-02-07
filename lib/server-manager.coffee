@@ -3,6 +3,8 @@ process = require 'child_process'
 clientManager = require './client-manager'
 logger = require './logger'
 
+# Runs the server executable. Starts, stops and restarts it as needed.
+# The executable does NOT restart automatically if the executable path changes.
 module.exports = ServerManager =
   subproc: null
   subscriptions: null
@@ -35,6 +37,7 @@ module.exports = ServerManager =
     # setting this will re-start the server when we are notified of the termination
     @running = true
 
+  # Starts the executable.
   start: () ->
     if @running
       atom.notifications.addInfo("Cannot start because Haskell Tools is already running.")
@@ -63,6 +66,7 @@ module.exports = ServerManager =
 
     clientManager.connect()
 
+  # Sends a kill signal to the process
   stop: () ->
     if !@running
       atom.notifications.addInfo("Cannot stop because Haskell Tools is not running.")

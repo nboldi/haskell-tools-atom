@@ -48,16 +48,27 @@ module.exports = PackageHandler =
     atom.notifications.addInfo("The folder " + directoryName + " have been " + (if added then "added to" else "removed from") + " Haskell Tools Refact")
     clientManager.whenReady () => @updateRegisteredPackages()
 
+  # Reacts to context menu right clicks
   toggleDir: (event) ->
-    directoryPath = $(event.target).attr('data-path')
+    directoryPathes = []
+    # Multiple selected directories can be toggled
+    $('.tree-view .directory.selected > .header .icon[data-path]').each (i,elem) =>
+      directoryPathes.push $(elem).attr('data-path')
     packages = atom.config.get('haskell-tools.refactored-packages')
-    @setDir(directoryPath, !(directoryPath in packages))
+    for directoryPath in directoryPathes
+      @setDir(directoryPath, !(directoryPath in packages))
 
+  # When the configuration changes, check which directories should be added/removed
   checkDirs: (change) ->
     for dir in change.newValue
       if !(dir in change.oldValue) then @setDir(dir, true)
     for dir in change.oldValue
       if !(dir in change.newValue) then @setDir(dir, false)
+
+  # I found no way to listen to packages added to the tree view, so instead we
+  # react to the tree view being changed. But because the tree view might not
+  # be present, we have to listen for changes in the dom.
+  # Unfortunately this is not possible with jquery.
 
   setupListeners: () ->
     # if the tree view is active, mark the selected packages

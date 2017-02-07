@@ -2,6 +2,8 @@ fs = require 'fs'
 path = require 'path'
 os = require 'os'
 
+# Module for detecting the server executable. It searches for the executable to
+# initialize the settings. It inspects a few known location depending on OS.
 module.exports = ExeLocator =
   locateExe: () ->
     daemonPath = atom.config.get("haskell-tools.daemon-path")
