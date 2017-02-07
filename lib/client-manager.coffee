@@ -4,6 +4,7 @@ NameDialog = require './name-dialog'
 markerManager = require './marker-manager'
 logger = require './logger'
 history = require './history-manager'
+statusBar = require './status-bar'
 
 module.exports = ClientManager =
   subscriptions: new CompositeDisposable
@@ -14,6 +15,7 @@ module.exports = ClientManager =
   jobs: []
 
   activate: () ->
+    statusBar.activate()
     history.activate()
     history.onUndo ([changed, removed]) => @reload changed, removed
 
@@ -89,8 +91,13 @@ module.exports = ClientManager =
       switch data.tag
         when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
         when "ErrorMessage" then atom.notifications.addError data.errorMsg
-        when "LoadedModules" then markerManager.removeAllMarkersFromFiles(data.loadedModules)
-        when "CompilationProblem" then markerManager.putErrorMarkers(data.errorMarkers)
+        when "LoadedModules"
+          markerManager.removeAllMarkersFromFiles data.loadedModules
+          statusBar.loadedData data.loadedModules
+        when "LoadingModules" then statusBar.willLoadData data.modulesToLoad
+        when "CompilationProblem"
+          markerManager.putErrorMarkers(data.errorMarkers)
+          statusBar.compilationProblem()
         when "ModulesChanged" then history.registerUndo(data.undoChanges)
         when "Disconnected" then # will reconnect if needed
         else
@@ -128,6 +135,7 @@ module.exports = ClientManager =
     @disconnect()
     @subscriptions.dispose()
     history.dispose()
+    statusBar.dispose()
 
   disconnect: () ->
     @ready = false
@@ -161,9 +169,11 @@ module.exports = ClientManager =
   performRefactor: (refactoring, file, range, params) ->
     selection = "#{range.start.row + 1}:#{range.start.column + 1}-#{range.end.row + 1}:#{range.end.column + 1}"
     @send { 'tag': 'PerformRefactoring', 'refactoring': refactoring, 'modulePath': file, 'editorSelection': selection, 'details': params }
+    statusBar.performRefactoring()
 
   addPackages: (packages) ->
     @send { 'tag': 'AddPackages', 'addedPathes': packages }
+    statusBar.addPackages()
 
   removePackages: (packages) ->
     @send { 'tag': 'RemovePackages', 'removedPathes': packages }

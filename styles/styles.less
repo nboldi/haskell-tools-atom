@@ -2,11 +2,15 @@
 @import 'syntax-variables';
 @import 'octicon-utf-codes';
 
+// marking which projects are tracked in haskell tools
 .tree-view .ht-refactored.icon::before {
   color: green;
 }
 
+// putting markers in the gutter
 .editor .gutter[gutter-name='ht-problems'] {
+  overflow: visible;
+  z-index: 2;
   width: 20px;
 }
 
@@ -17,11 +21,7 @@
   color: @text-color-error;
 }
 
-.editor .gutter[gutter-name='ht-problems'] {
-  overflow: visible;
-  z-index: 2;
-}
-
+// highlighting the location of errors
 .editor .highlights .highlight.ht-comp-problem .region {
   visibility: visible;
   border-bottom-style: dotted;
@@ -29,6 +29,7 @@
   border-bottom-color: @text-color-error;
 }
 
+// displayed tooltips
 .ht-comp-problem .ht-tooltip {
   position: absolute;
   text-align: left;
@@ -41,4 +42,18 @@
   padding: 5px;
   paddig-left: 10px;
   z-index: 3;
+}
+
+// status bar
+status-bar .ht-status .ht-message {
+}
+
+status-bar .ht-status .ht-icon {
+  padding-right: 5px;
+}
+
+status-bar .ht-status .ht-icon:after {
+  font-family: "Octicons Regular";
+  font-size: 130%;
+  content: @sync;
 }
