@@ -3,8 +3,12 @@
 @import 'octicon-utf-codes';
 
 // marking which projects are tracked in haskell tools
-.tree-view .ht-refactored.icon::before {
-  color: green;
+.tree-view .ht-refactored.icon:after {
+  font-family: "Octicons Regular";
+  content: @sync;
+  font-size: 130%;
+  color: @text-color-highlight;
+  padding-left: 3px;
 }
 
 // putting markers in the gutter
@@ -27,6 +31,13 @@
   border-bottom-style: dotted;
   border-bottom-width: 1px;
   border-bottom-color: @text-color-error;
+}
+
+// highlight locations of errors in tree view
+.tree-view .ht-tree-error:before {
+  font-family: "Octicons Regular";
+  color: @text-color-error;
+  content: @alert;
 }
 
 // displayed tooltips

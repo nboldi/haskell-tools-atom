@@ -15,6 +15,9 @@ module.exports = MarkerManager =
         editor.onDidDestroy () => @editors[editor.buffer.file.path] = null
         @putMarkersOn editor
 
+    # Showing tooltips when hovering over the markers
+    # Note: I wanted to show these on
+    # TODO: hide all tooltips when one is shown. (Cancel timers as well)
     $('atom-workspace').on 'mouseenter', '.editor .ht-comp-problem', (event) =>
       elem = $(event.target)
       if not elem.hasClass('ht-comp-problem')
@@ -66,6 +69,9 @@ module.exports = MarkerManager =
   putMarker: ([details,text]) ->
     file = details.file
     editor = @editors[file]
+    $('.tree-view .icon[data-path]').each (i,elem) =>
+      if file.startsWith $(elem).attr('data-path')
+        $(elem).addClass 'ht-tree-error'
     if not @markers[file]
       @markers[file] = []
     if editor
@@ -94,7 +100,20 @@ module.exports = MarkerManager =
   # TODO: clear all markers command in the menu
 
   removeAllMarkersFromFiles: (files) ->
-    for file in files
+    console.log files
+    $('.tree-view .icon[data-path]').each (i,elem) =>
+      if $(elem).attr('data-path') in (files.map ([fn,mn]) -> fn)
+        $(elem).removeClass 'ht-tree-error'
+    $('.tree-view .header .icon[data-path]').each (i,elem) =>
+      # remove markers on folders without errors in files or subfolders
+      # depeds on bottom-up traversal
+      isThereChild = false
+      $(elem).children().each (i,child) =>
+        if $(child).hasClass 'ht-tree-error'
+          isThereChild = true
+      if not isThereChild then $(elem).removeClass 'ht-tree-error'
+
+    for [file,mn] in files
       @removeAllMarkersFrom file
 
   removeAllMarkersFrom: (file) ->

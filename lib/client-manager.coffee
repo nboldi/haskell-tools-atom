@@ -88,27 +88,8 @@ module.exports = ClientManager =
       if str.match /^\s*$/
         return
       logger.log('ClientManager: Received: ' + str)
-      try
-        data = JSON.parse(str)
-        @incomingMsg = ''
-        switch data.tag
-          when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
-          when "ErrorMessage" then atom.notifications.addError data.errorMsg
-          when "LoadedModules"
-            markerManager.removeAllMarkersFromFiles data.loadedModules
-            statusBar.loadedData data.loadedModules
-          when "LoadingModules" then statusBar.willLoadData data.modulesToLoad
-          when "CompilationProblem"
-            markerManager.putErrorMarkers(data.errorMarkers)
-            statusBar.compilationProblem()
-          when "ModulesChanged" then history.registerUndo(data.undoChanges)
-          when "Disconnected" then # will reconnect if needed
-          else
-            atom.notifications.addError 'Internal error: Unrecognized response'
-            logger.error('Unrecognized response from server: ' + msg)
-      catch error
-        # probably not the whole message is received
-        @incomingMsg = str
+      for msgPart in str.split '\n'
+        @handleMsg msgPart
 
     @client.on 'close', () =>
       @emitter.emit 'disconnect'
@@ -119,6 +100,29 @@ module.exports = ClientManager =
       @ready = false
       callback = () => @connect()
       setTimeout callback, 1000
+
+  handleMsg: (str) ->
+    try
+      data = JSON.parse(str)
+      @incomingMsg = ''
+      switch data.tag
+        when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
+        when "ErrorMessage" then atom.notifications.addError data.errorMsg
+        when "LoadedModules"
+          markerManager.removeAllMarkersFromFiles data.loadedModules
+          statusBar.loadedData data.loadedModules
+        when "LoadingModules" then statusBar.willLoadData data.modulesToLoad
+        when "CompilationProblem"
+          markerManager.putErrorMarkers(data.errorMarkers)
+          statusBar.compilationProblem()
+        when "ModulesChanged" then history.registerUndo(data.undoChanges)
+        when "Disconnected" then # will reconnect if needed
+        else
+          atom.notifications.addError 'Internal error: Unrecognized response'
+          logger.error('Unrecognized response from server: ' + msg)
+    catch error
+      # probably not the whole message is received
+      @incomingMsg = str
 
   onConnect: (callback) ->
     @emitter.on 'connect', callback
