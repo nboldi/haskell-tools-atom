@@ -7,11 +7,12 @@
 
  1. Start Atom
  1. Create a new folder for the haskell package. Create a new Try.hs file in it, with the content
-   ```
-    module Try where
-    x = ()
-    y = x
-   ```
+ 
+  ```
+   module Try where
+   x = ()
+   y = x
+  ```
  1. If the tree view is not visible, then show it with View/Toggle Tree View.
  1. Right click on the Tree View, click Add Project Folder
  1. Select the folder you created above
