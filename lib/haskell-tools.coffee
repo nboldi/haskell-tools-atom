@@ -30,13 +30,13 @@ module.exports = HaskellTools =
   activate: (state) ->
     atom.notifications.addInfo("haskell-tools is started")
     exeLocator.locateExe()
+    serverManager.activate() # must go before pkgHandler, because it activates client manager that pkg handler uses
     pkgHandler.activate()
     markerManager.activate()
-    serverManager.activate()
     cursorManager.activate()
 
   deactivate: ->
     cursorManager.dispose()
-    serverManager.dispose()
     markerManager.dispose()
     pkgHandler.dispose()
+    serverManager.dispose()

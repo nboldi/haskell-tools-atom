@@ -11,7 +11,15 @@ module.exports = StatusBar =
     @node = $("<div class='inline-block ht-status'>
                 <span class='ht-icon'></span>
               </div>").appendTo context
-    @message = $("<span class='ht-message'>Starting</span>").appendTo @node
+    @message = $("<span class='ht-message'>Disconnected</span>").appendTo @node
+
+  # When the server is started
+  connected: () ->
+    @setStatus 'Ready'
+
+  # When the server is stopped
+  disconnected: () ->
+    @setStatus 'Disconnected'
 
   # When packages are added display that the server is working on registering them.
   addPackages: () ->
@@ -29,7 +37,8 @@ module.exports = StatusBar =
   willLoadData: (mods) ->
     @remaining = mods.filter((p) -> not p.endsWith('.hs-boot')).length
     @done = 0
-    @setStatus "Reloading: 0/#{@remaining}"
+    if @remaining == 0 then @setStatus "Ready"
+    else @setStatus "Reloading: 0/#{@remaining}"
 
   # Inform the user that a given module has been loaded.
   loadedData: (mods) ->

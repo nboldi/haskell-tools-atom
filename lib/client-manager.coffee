@@ -68,6 +68,8 @@ module.exports = ClientManager =
     autoStart = atom.config.get("haskell-tools.start-automatically")
 
     @emitter.on 'connect', () => @executeJobs()
+    @emitter.on 'connect', () => statusBar.connected()
+    @emitter.on 'disconnect', () => statusBar.disconnected()
 
     if autoStart
       @connect()
