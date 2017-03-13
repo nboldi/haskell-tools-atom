@@ -4,7 +4,7 @@
 # Controls how error markers are registered and displayed when
 module.exports = MarkerManager =
   editors: {}
-  markers: []
+  markers: {}
 
   # TODO: multiple editors for the same file
   activate: () ->
@@ -113,6 +113,17 @@ module.exports = MarkerManager =
 
   # TODO: clear all markers command in the menu
 
+  # Remove all markers from files in a given package
+  removeAllMarkersFromPackage: (pkg) ->
+    $('.tree-view .directory').each (i,elem) =>
+      if $(elem).children('.header').find('[data-path]').attr('data-path') == pkg
+        $(elem).find('.ht-tree-error').removeClass 'ht-tree-error'
+    for file, markerFile of @markers
+      if file.startsWith(pkg)
+        for markerReg in markerFile
+            markerReg.marker?.destroy()
+        @markers[file] = []
+
   # Deregisters and removes all markers that are in a given file.
   removeAllMarkersFromFiles: (files) ->
     $('.tree-view .icon[data-path]').each (i,elem) =>
@@ -120,7 +131,7 @@ module.exports = MarkerManager =
         $(elem).removeClass 'ht-tree-error'
     $('.tree-view .header .icon[data-path]').each (i,elem) =>
       # remove markers on folders without errors in files or subfolders
-      # depeds on bottom-up traversal
+      # depends on bottom-up traversal
       isThereChild = false
       $(elem).children().each (i,child) =>
         if $(child).hasClass 'ht-tree-error'

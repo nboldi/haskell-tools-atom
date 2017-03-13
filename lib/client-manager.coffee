@@ -201,6 +201,8 @@ module.exports = ClientManager =
 
   removePackages: (packages) ->
     @send { 'tag': 'RemovePackages', 'removedPathes': packages }
+    for pkg in packages
+      markerManager.removeAllMarkersFromPackage(pkg)
 
   reload: (changed, removed) ->
     @send { 'tag': 'ReLoad', 'changedModules': changed, 'removedModules': removed }

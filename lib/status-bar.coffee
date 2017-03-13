@@ -31,7 +31,7 @@ module.exports = StatusBar =
 
   # When a compilation problem is found, tell the user about it.
   compilationProblem: () ->
-    @setStatus 'Compilation problem'
+    @setStatus 'Ready'
 
   # Show the user how many modules are needed to be loaded.
   willLoadData: (mods) ->
