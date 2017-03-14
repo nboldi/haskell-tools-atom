@@ -7,11 +7,12 @@ module.exports = StatusBar =
   done: 0
 
   activate: () ->
-    context = $('status-bar .status-bar-left')
-    @node = $("<div class='inline-block ht-status'>
-                <span class='ht-icon'></span>
-              </div>").appendTo context
-    @message = $("<span class='ht-message'>Disconnected</span>").appendTo @node
+    $ -> # wait for DOM to be ready, and status bar to appear
+      context = $('status-bar .status-bar-left')
+      @node = $("<div class='inline-block ht-status'>
+                  <span class='ht-icon'></span>
+                </div>").appendTo context
+      @message = $("<span class='ht-message'>Disconnected</span>").appendTo @node
 
   # When the server is started
   connected: () ->
