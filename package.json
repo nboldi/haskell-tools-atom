@@ -1,9 +1,13 @@
 {
   "name": "haskell-tools",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A binding for the Haskell-tools framework",
-  "engines": { "atom": "*" },
-  "dependencies": { "atom-space-pen-views": "^2.2.0" },
+  "engines": {
+    "atom": "*"
+  },
+  "dependencies": {
+    "atom-space-pen-views": "^2.2.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/nboldi/haskell-tools-atom.git"
@@ -13,5 +17,7 @@
   },
   "licence": "BSD3",
   "main": "./lib/haskell-tools",
-  "styles": ["./styles/styles.less"]
+  "styles": [
+    "./styles/styles.less"
+  ]
 }
