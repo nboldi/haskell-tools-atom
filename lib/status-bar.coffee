@@ -7,7 +7,7 @@ module.exports = StatusBar =
   done: 0
 
   activate: () ->
-    $ -> # wait for DOM to be ready, and status bar to appear
+    $ => # wait for DOM to be ready, and status bar to appear
       context = $('status-bar .status-bar-left')
       @node = $("<div class='inline-block ht-status'>
                   <span class='ht-icon'></span>
@@ -49,7 +49,8 @@ module.exports = StatusBar =
     else @setStatus "Load (#{@done}/#{@remaining}): #{last[1]}"
 
   setStatus: (text) ->
-    @message.text(text)
+    if @message
+      @message.text(text)
 
   deactivate: () ->
     @node.detach()
