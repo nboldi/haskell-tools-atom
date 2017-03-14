@@ -11,7 +11,6 @@
   "bugs": {
     "url": "https://github.com/nboldi/haskell-tools-atom/issues"
   },
-  "activationHooks": ["language-haskell:grammar-used"],
   "licence": "BSD3",
   "main": "./lib/haskell-tools",
   "styles": ["./styles/styles.less"]
