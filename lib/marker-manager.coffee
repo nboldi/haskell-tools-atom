@@ -1,10 +1,12 @@
 {CompositeDisposable} = require 'atom'
 {$} = require('atom-space-pen-views')
 
-# Controls how error markers are registered and displayed when
+# Controls how error markers are registered and displayed when there are compilation
+# problems in the source files
 module.exports = MarkerManager =
   editors: {}
   markers: {}
+  tooltippedMarker: null # the markers that have visible tooltips
 
   # TODO: multiple editors for the same file
   activate: () ->
@@ -22,13 +24,13 @@ module.exports = MarkerManager =
     # highlight is below the text, and placing it above cause visual problems.
     # This could be solved by a mouseover on the whole editor and checking if
     # the mouse is actually over a problem, but this seems to overdo the job.
-    # TODO: hide all tooltips when one is shown. (Cancel timers as well)
     $('atom-workspace').on 'mouseenter', '.editor .ht-comp-problem', (event) =>
       elem = $(event.target)
       if not elem.hasClass('ht-comp-problem')
         return
       marker = @getMarkerFromElem elem
       child = elem.children('.ht-tooltip')
+      @hideAllMarkers()
       if child.length == 0
         elem.append("<div class='ht-tooltip'>#{marker.text}</div>")
         marker.elem = elem.children('.ht-tooltip')
@@ -36,6 +38,7 @@ module.exports = MarkerManager =
       else
         child.show()
         @keepTooltip elem
+      @tooltippedMarker = marker
 
     $('atom-workspace').on 'mouseenter', '.editor .ht-comp-problem .ht-tooltip', (event) =>
       @keepTooltip $(event.target).parent()
@@ -49,6 +52,12 @@ module.exports = MarkerManager =
     if marker.timeout then clearTimeout marker.timeout
     hiding = () => marker.elem.hide()
     marker.timeout = setTimeout hiding, 500
+
+  hideAllMarkers: () ->
+    console.log @tooltippedMarker
+    if @tooltippedMarker
+      @tooltippedMarker.elem.hide()
+      @tooltippedMarker = null
 
   # Prevents the tooltip from being hidden
   keepTooltip: (elem) ->
