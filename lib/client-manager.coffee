@@ -10,12 +10,12 @@ statusBar = require './status-bar'
 # the server.
 module.exports = ClientManager =
   subscriptions: new CompositeDisposable
-  emitter: new Emitter
-  client: null
-  ready: false
-  stopped: true
-  jobs: []
-  incomingMsg: ''
+  emitter: new Emitter # generates connect and disconnect events
+  client: null # the client socket
+  ready: false # true, if the client can send messages to the server
+  stopped: true # true, if disconnected from the server by the user
+  jobs: [] # tasks to do after the connection has been established
+  incomingMsg: '' # the part of the incoming message already received
 
   activate: () ->
     statusBar.activate()
@@ -70,6 +70,7 @@ module.exports = ClientManager =
     @emitter.on 'connect', () => @executeJobs()
     @emitter.on 'connect', () => statusBar.connected()
     @emitter.on 'disconnect', () => statusBar.disconnected()
+    @emitter.on 'disconnect', () => markerManager.removeAllMarkers()
 
     if autoStart
       @connect()

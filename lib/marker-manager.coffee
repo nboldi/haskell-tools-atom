@@ -4,14 +4,15 @@
 # Controls how error markers are registered and displayed when there are compilation
 # problems in the source files
 module.exports = MarkerManager =
-  editors: {}
-  markers: {}
-  tooltippedMarker: null # the markers that have visible tooltips
+  editors: {} # We store the editors associated with the given files. We use
+              # the editor object for putting up markers.
+  markers: {} # We store the created markers for each file. Inside the file we
+              # identify markers using their index in the list of all markers.
+  tooltippedMarker: null # The markers that have visible tooltips.
+                         # The next tooltip will close this.
 
-  # TODO: multiple editors for the same file
   activate: () ->
     @subscriptions = new CompositeDisposable
-    # TODO: if editor changes path, marker manager should recognize it
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
       if editor.buffer.file
         @editors[editor.buffer.file.path] = editor
@@ -30,12 +31,14 @@ module.exports = MarkerManager =
         return
       marker = @getMarkerFromElem elem
       child = elem.children('.ht-tooltip')
-      @hideAllMarkers()
+      @hideShownTooltip()
       if child.length == 0
+        # Creating a new tooltip for the marker
         elem.append("<div class='ht-tooltip'>#{marker.text}</div>")
         marker.elem = elem.children('.ht-tooltip')
         marker.elem.width(200 + Math.min(200, marker.text.length * 2))
       else
+        # The tooltip already exists
         child.show()
         @keepTooltip elem
       @tooltippedMarker = marker
@@ -51,10 +54,9 @@ module.exports = MarkerManager =
     marker = @getMarkerFromElem elem
     if marker.timeout then clearTimeout marker.timeout
     hiding = () => marker.elem.hide()
-    marker.timeout = setTimeout hiding, 500
+    marker.timeout = setTimeout hiding, 1000
 
-  hideAllMarkers: () ->
-    console.log @tooltippedMarker
+  hideShownTooltip: () ->
     if @tooltippedMarker
       @tooltippedMarker.elem.hide()
       @tooltippedMarker = null
@@ -120,7 +122,13 @@ module.exports = MarkerManager =
     decorator = gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
     marker
 
-  # TODO: clear all markers command in the menu
+  # Remove all markers in the entire workspace
+  removeAllMarkers: () ->
+    $('.tree-view .ht-tree-error').removeClass 'ht-tree-error'
+    for file, markerFile of @markers
+      for markerReg in markerFile
+          markerReg.marker?.destroy()
+    @markers = {}
 
   # Remove all markers from files in a given package
   removeAllMarkersFromPackage: (pkg) ->
