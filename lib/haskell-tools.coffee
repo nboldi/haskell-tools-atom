@@ -2,8 +2,10 @@ net = require 'net'
 pkgHandler = require './package-handler'
 exeLocator = require './exe-locator'
 serverManager = require './server-manager'
+clientManager = require './client-manager'
 markerManager = require './marker-manager'
 cursorManager = require './cursor-manager'
+menuManager = require './menu-manager'
 logger = require './logger'
 
 # Main module for the plugin. Contains the packages configuration and
@@ -37,13 +39,28 @@ module.exports = HaskellTools =
     logger.log 'Haskell-tools plugin is activated'
     exeLocator.locateExe()
     serverManager.activate() # must go before pkgHandler, because it activates client manager that pkg handler uses
+    clientManager.activate()
+    serverManager.onStarted =>
+      clientManager.connect()
+      logger.log 'enable stop server'
+      menuManager.enableCommand('haskell-tools:stop-server')
+      menuManager.enableCommand('haskell-tools:restart-server')
+      menuManager.disableCommand('haskell-tools:start-server')
+    serverManager.onStopped =>
+      clientManager.disconnect()
+      menuManager.disableCommand('haskell-tools:stop-server')
+      menuManager.disableCommand('haskell-tools:restart-server')
+      menuManager.enableCommand('haskell-tools:start-server')
     pkgHandler.activate()
     markerManager.activate()
     cursorManager.activate()
+    menuManager.disableCommand('haskell-tools:stop-server')
+    menuManager.disableCommand('haskell-tools:restart-server')
 
   deactivate: ->
     logger.log 'Haskell-tools plugin is deactivated'
     cursorManager.dispose()
     markerManager.dispose()
     pkgHandler.dispose()
+    clientManager.dispose()
     serverManager.dispose()

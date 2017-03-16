@@ -32,6 +32,7 @@ module.exports = PackageHandler =
     $('.tree-view .header .icon[data-path]').each (i,elem) =>
       if $(elem).attr('data-path') in packages
         $(elem).addClass('ht-refactored')
+        $(elem).closest('.header').addClass('ht-refactored-header')
 
   # Register or unregister the given directory in the Haskell Tools framework. This perform both the registration and the associated view changes.
   setDir: (directoryPath, added) ->
@@ -39,6 +40,7 @@ module.exports = PackageHandler =
     $('.tree-view .header .icon[data-path="' + directoryPath.replace(/\\/g, "\\\\") + '"]').each (i,elem) =>
       if $(elem).hasClass('ht-refactored') != added
         $(elem).toggleClass 'ht-refactored'
+        $(elem).closest('.header').toggleClass('ht-refactored-header')
 
     pathSegments = directoryPath.split /\\|\//
     directoryName = pathSegments[pathSegments.length-1]

@@ -59,10 +59,17 @@
   }
 ],
 'context-menu':
-  '.tree-view .header': [
+  '.tree-view .header.ht-refactored-header': [
     {
-      'label': 'Toggle Haskell-tools Refactoring'
+      'label': 'Remove from Haskell-tools'
       'command': 'haskell-tools:toggle-package'
-    },
+    }
+    {'type': 'separator'}
+  ]
+  '.tree-view .header:not(.ht-refactored-header)': [
+    {
+      'label': 'Add to Haskell-tools'
+      'command': 'haskell-tools:toggle-package'
+    }
     {'type': 'separator'}
   ]
