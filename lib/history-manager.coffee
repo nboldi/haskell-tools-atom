@@ -1,7 +1,9 @@
 {CompositeDisposable,Emitter} = require 'atom'
 fs = require 'fs'
 
-# Keeps track of performed refactorings.
+# Keeps track of performed refactorings, can undo them. This is needed because
+# the refactorings affect many files that may not be open in the editor, so the
+# editor undo stack cannot be used.
 module.exports = HistoryManager =
   undoStack: []
   emitter: new Emitter

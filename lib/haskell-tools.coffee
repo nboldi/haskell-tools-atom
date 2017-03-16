@@ -12,20 +12,25 @@ module.exports = HaskellTools =
   config:
     'start-automatically':
       type: 'boolean'
+      description: 'If set the engine will be started when the editor starts.'
       default: false
     'refactored-packages':
       type: 'array'
+      description: 'Contains the list of packages that should be loaded into the engine.'
       default: []
       items:
         type: 'string'
     'connect-port':
       type: 'integer'
+      description: 'The number of the port that the engine and the client uses for communication.'
       default: 4123
     'daemon-path':
       type: 'string'
+      description: 'The location of the executable. If not set correctly, the plugin tries to find it in a few possible locations.'
       default: '<autodetect>'
     'debug-mode':
       type: 'boolean'
+      description: 'If set to true, the server and the client will log their communication in the clients console.'
       default: 'false'
 
   activate: (state) ->

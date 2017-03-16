@@ -65,6 +65,8 @@ module.exports = PackageHandler =
     for dir in change.oldValue
       if !(dir in change.newValue) then @setDir(dir, false)
 
+  # We need to know when a package that is registered in the engine is loaded
+  # to mark it as loaded.
   # I found no way to listen to packages added to the tree view, so instead we
   # react to the tree view being changed. But because the tree view might not
   # be present, we have to listen for changes in the dom.

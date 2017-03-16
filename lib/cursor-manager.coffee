@@ -1,6 +1,7 @@
 {CompositeDisposable} = require 'atom'
 
-# Keeps track of the cursor position between reloads
+# Keeps track of the cursor position between reloads (normally in atom the position
+# is initially the first character in the first line).
 module.exports = CursorManager =
   subscriptions: new CompositeDisposable
   cursorPos: null

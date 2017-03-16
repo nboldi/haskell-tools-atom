@@ -5,11 +5,12 @@ os = require 'os'
 # Module for detecting the server executable. It searches for the executable to
 # initialize the settings. It inspects a few known location depending on OS.
 module.exports = ExeLocator =
-  locateExe: () ->
+  exeSet: () ->
     daemonPath = atom.config.get("haskell-tools.daemon-path")
-    if fs.existsSync(daemonPath)
-      return
+    return fs.existsSync(daemonPath)
 
+  locateExe: () ->
+    if @exeSet() then return
     if /win/.test os.platform()
       userName = process.env['USERPROFILE'].split(path.sep)[2];
       pathes = [ "C:\\Users\\" + userName + "\\AppData\\Roaming\\cabal\\bin\\ht-daemon.exe"
@@ -26,5 +27,5 @@ module.exports = ExeLocator =
         atom.config.set("haskell-tools.daemon-path", path)
 
     if !found
-      atom.notifications.addInfo("Cannot automatically find ht-daemon executable. Select ht-daemon executable manually."
+      atom.notifications.addInfo("Cannot automatically find ht-daemon executable. Select ht-daemon executable manually in the settings."
                                    + " If ht-daemon is not installed user 'cabal install ht-daemon'.")

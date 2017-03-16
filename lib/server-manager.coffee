@@ -2,6 +2,7 @@
 process = require 'child_process'
 clientManager = require './client-manager'
 logger = require './logger'
+exeLocator = require './exe-locator'
 
 # Runs the server executable. Starts, stops and restarts it as needed.
 # The executable does NOT restart automatically if the executable path changes.
@@ -39,6 +40,9 @@ module.exports = ServerManager =
 
   # Starts the executable.
   start: () ->
+    if !exeLocator.exeSet()
+      atom.notifications.addError("The ht-daemon executable does not exist.")
+      return
     if @running
       atom.notifications.addInfo("Cannot start because Haskell Tools is already running.")
       return
