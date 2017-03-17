@@ -162,7 +162,7 @@ module.exports = ClientManager =
   disconnect: () ->
     @ready = false
     @stopped = true
-    @client.destroy()
+    if @client then @client.destroy()
 
   # Send a command to the server via JSON
   send: (data) ->

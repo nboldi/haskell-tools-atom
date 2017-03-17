@@ -52,5 +52,5 @@ module.exports = StatusBar =
     if @message
       @message.text(text)
 
-  deactivate: () ->
-    @node.detach()
+  dispose: () ->
+    if @node then @node.detach()
