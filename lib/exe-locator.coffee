@@ -1,6 +1,7 @@
 fs = require 'fs'
 path = require 'path'
 os = require 'os'
+logger = require './logger'
 
 # Module for detecting the server executable. It searches for the executable to
 # initialize the settings. It inspects a few known location depending on OS.
@@ -11,14 +12,18 @@ module.exports = ExeLocator =
 
   locateExe: () ->
     if @exeSet() then return
-    if /win/.test os.platform()
-      userName = process.env['USERPROFILE'].split(path.sep)[2];
-      pathes = [ "C:\\Users\\" + userName + "\\AppData\\Roaming\\cabal\\bin\\ht-daemon.exe"
-               , "C:\\Users\\" + userName + "\\AppData\\Roaming\\local\\bin\\ht-daemon.exe"
-               ]
-    else if /linux/.test os.platform()
-      pathes = [ "~/.cabal/bin/ht-daemon" ]
-    else atom.notifications.addInfo("Cannot determine OS. Select ht-daemon executable manually.")
+    pathes = []
+    switch os.platform()
+      when 'win32'
+        userName = process.env['USERPROFILE'].split(path.sep)[2];
+        pathes = [ "C:\\Users\\" + userName + "\\AppData\\Roaming\\cabal\\bin\\ht-daemon.exe"
+                 , "C:\\Users\\" + userName + "\\AppData\\Roaming\\local\\bin\\ht-daemon.exe"
+                 ]
+      when 'linux', 'darwin', 'openbsd', 'freebsd'
+        pathes = [ "~/.cabal/bin/ht-daemon" ]
+      else
+        logger.error('Unknown OS: ' + os.platform() + '. Select ht-daemon executable manually.')
+        atom.notifications.addInfo("Cannot determine OS. Select ht-daemon executable manually.")
 
     found: false
     for path in pathes
