@@ -27,5 +27,7 @@ module.exports = ExeLocator =
         atom.config.set("haskell-tools.daemon-path", path)
 
     if !found
-      atom.notifications.addInfo("Cannot automatically find ht-daemon executable. Select ht-daemon executable manually in the settings."
-                                   + " If ht-daemon is not installed user 'cabal install ht-daemon'.")
+      msg = "Cannot automatically find ht-daemon executable. Select ht-daemon " +
+            "executable manually in the settings. If ht-daemon is not " +
+            "installed user 'cabal install ht-daemon'."
+      atom.notifications.addInfo(msg)

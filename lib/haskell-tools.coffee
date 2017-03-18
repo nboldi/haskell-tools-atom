@@ -53,6 +53,13 @@ module.exports = HaskellTools =
       menuManager.disableCommand('haskell-tools:restart-server')
       menuManager.enableCommand('haskell-tools:start-server')
     pkgHandler.activate()
+    clientManager.onConnect =>
+      pkgHandler.reconnect()
+    pkgHandler.onChange =>
+      clientManager.whenReady =>
+        {added, removed} = pkgHandler.getChanges()
+        clientManager.addPackages added
+        clientManager.removePackages removed
     markerManager.activate()
     tooltipManager.activate()
     cursorManager.activate()

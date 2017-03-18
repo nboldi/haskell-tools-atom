@@ -1,6 +1,5 @@
 {$} = require('atom-space-pen-views')
-{CompositeDisposable} = require 'atom'
-clientManager = require './client-manager'
+{CompositeDisposable, Emitter} = require 'atom'
 logger = require './logger'
 
 # A module for handling the packages that are registered in the Haskell Tools framework.
@@ -8,6 +7,7 @@ module.exports = PackageHandler =
   subscriptions: null
   treeListener: null
   packagesRegistered: []
+  emitter: new Emitter # Generates change packages events for client manager
 
   activate: () ->
     @subscriptions = new CompositeDisposable
@@ -17,14 +17,20 @@ module.exports = PackageHandler =
 
     @subscriptions.add atom.config.onDidChange 'haskell-tools.refactored-packages', (change) => @checkDirs(change)
 
-    clientManager.onConnect () =>
-      @packagesRegistered = []
-      @updateRegisteredPackages()
     @setupListeners()
 
   dispose: () ->
     @treeListener.disconnect()
     @subscriptions.dispose()
+
+  # Should be called when the server is restarted
+  reconnect: () ->
+    @packagesRegistered = []
+    @emitter.emit 'change'
+
+  reset: () ->
+    @packagesRegistered = []
+    atom.config.set('haskell-tools.refactored-packages', [])
 
   # Mark the directories in the tree view, that are added to Haskell Tools with the class .ht-refactored
   markDirs: () ->
@@ -47,8 +53,8 @@ module.exports = PackageHandler =
     packages = atom.config.get('haskell-tools.refactored-packages')
     if added then (packages.push(directoryPath) if !(directoryPath in packages)) else packages = packages.filter (d) -> d isnt directoryPath
     atom.config.set('haskell-tools.refactored-packages', packages)
-    atom.notifications.addInfo("The folder " + directoryName + " have been " + (if added then "added to" else "removed from") + " Haskell Tools Refact")
-    clientManager.whenReady () => @updateRegisteredPackages()
+    atom.notifications.addSuccess("The folder " + directoryName + " have been " + (if added then "added to" else "removed from") + " Haskell Tools Refact")
+    @emitter.emit 'change'
 
   # Reacts to context menu right clicks
   toggleDir: (event) ->
@@ -66,6 +72,11 @@ module.exports = PackageHandler =
       if !(dir in change.oldValue) then @setDir(dir, true)
     for dir in change.oldValue
       if !(dir in change.newValue) then @setDir(dir, false)
+
+  # Listen for changes in the list of packages that should be loaded to the engine
+  # The listener should call getChanges to get the exact changes
+  onChange: (callback) ->
+    @emitter.on 'change', callback
 
   # We need to know when a package that is registered in the engine is loaded
   # to mark it as loaded.
@@ -88,12 +99,10 @@ module.exports = PackageHandler =
     if treeView.length > 0
       @treeListener.observe(treeView[0], { childList: true })
 
-  updateRegisteredPackages: () ->
+  getChanges: () ->
     packages = atom.config.get('haskell-tools.refactored-packages') ? []
     logger.log('Registering packages to Haskell Tools: ' + packages)
     newPackages = packages.filter (x) => not (x in @packagesRegistered)
     removedPackages = @packagesRegistered.filter (x) => not (x in packages)
-
-    clientManager.addPackages(newPackages) if newPackages.length > 0
-    clientManager.removePackages(removedPackages) if removedPackages.length > 0
     @packagesRegistered = packages
+    { added: newPackages, removed: removedPackages }
