@@ -4,6 +4,7 @@ exeLocator = require './exe-locator'
 serverManager = require './server-manager'
 clientManager = require './client-manager'
 markerManager = require './marker-manager'
+tooltipManager = require './tooltip-manager'
 cursorManager = require './cursor-manager'
 menuManager = require './menu-manager'
 logger = require './logger'
@@ -53,6 +54,7 @@ module.exports = HaskellTools =
       menuManager.enableCommand('haskell-tools:start-server')
     pkgHandler.activate()
     markerManager.activate()
+    tooltipManager.activate()
     cursorManager.activate()
     menuManager.disableCommand('haskell-tools:stop-server')
     menuManager.disableCommand('haskell-tools:restart-server')
@@ -60,6 +62,7 @@ module.exports = HaskellTools =
   deactivate: ->
     logger.log 'Haskell-tools plugin is deactivated'
     cursorManager.dispose()
+    tooltipManager.dispose()
     markerManager.dispose()
     pkgHandler.dispose()
     clientManager.dispose()

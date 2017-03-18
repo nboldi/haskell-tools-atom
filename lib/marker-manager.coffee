@@ -8,66 +8,22 @@ module.exports = MarkerManager =
               # the editor object for putting up markers.
   markers: {} # We store the created markers for each file. Inside the file we
               # identify markers using their index in the list of all markers.
-  tooltippedMarker: null # The markers that have visible tooltips.
-                         # The next tooltip will close this.
 
   activate: () ->
     @subscriptions = new CompositeDisposable
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
       if editor.buffer.file
-        @editors[editor.buffer.file.path] = editor
+        if @editors[editor.buffer.file.path]
+          @editors[editor.buffer.file.path].push editor
+        else @editors[editor.buffer.file.path] = [editor]
         editor.addGutter(name: 'ht-problems', priority: 10, visible: false)
-        editor.onDidDestroy () => @editors[editor.buffer.file.path] = null
+        editor.onDidDestroy () =>
+          editorIndex = @editors[editor.buffer.file.path].indexOf editor
+          @editors[editor.buffer.file.path].splice editorIndex, 1
         @putMarkersOn editor
 
-    # Showing tooltips when hovering over the markers
-    # Note: I wanted to show these on the marked source code fragment but the
-    # highlight is below the text, and placing it above cause visual problems.
-    # This could be solved by a mouseover on the whole editor and checking if
-    # the mouse is actually over a problem, but this seems to overdo the job.
-    $('atom-workspace').on 'mouseenter', '.editor .ht-comp-problem', (event) =>
-      elem = $(event.target)
-      if not elem.hasClass('ht-comp-problem')
-        return
-      marker = @getMarkerFromElem elem
-      child = elem.children('.ht-tooltip')
-      @hideShownTooltip()
-      if child.length == 0
-        # Creating a new tooltip for the marker
-        elem.append("<div class='ht-tooltip'>#{marker.text}</div>")
-        marker.elem = elem.children('.ht-tooltip')
-        marker.elem.width(200 + Math.min(200, marker.text.length * 2))
-      else
-        # The tooltip already exists
-        child.show()
-        @keepTooltip elem
-      @tooltippedMarker = marker
-
-    $('atom-workspace').on 'mouseenter', '.editor .ht-comp-problem .ht-tooltip', (event) =>
-      @keepTooltip $(event.target).parent()
-
-    $('atom-workspace').on 'mouseout', '.editor .ht-comp-problem', (event) =>
-      @hideTooltip $(event.target).closest('.ht-comp-problem')
-
-  # Hides the corresponding tooltip after a given time interval.
-  hideTooltip: (elem) ->
-    marker = @getMarkerFromElem elem
-    if marker.timeout then clearTimeout marker.timeout
-    hiding = () => marker.elem.hide()
-    marker.timeout = setTimeout hiding, 1000
-
-  hideShownTooltip: () ->
-    if @tooltippedMarker
-      @tooltippedMarker.elem.hide()
-      @tooltippedMarker = null
-
-  # Prevents the tooltip from being hidden
-  keepTooltip: (elem) ->
-    marker = @getMarkerFromElem elem
-    if marker.timeout then clearTimeout marker.timeout
-
   dispose: () ->
-    $('atom-workspace').off()
+    @removeAllMarkers()
     @subscriptions.dispose()
 
   # Gets the marker for a given marker based on the containing editor and the
@@ -91,25 +47,26 @@ module.exports = MarkerManager =
   # Registers the given error marker, shows if possible
   putMarker: ([details,text]) ->
     file = details.file
-    editor = @editors[file]
+    editorsFor = @editors[file]
     $('.tree-view .icon[data-path]').each (i,elem) =>
       if file.startsWith $(elem).attr('data-path')
         $(elem).addClass 'ht-tree-error'
     if not @markers[file]
       @markers[file] = []
-    if editor
-      # editor is open
-      marker = @putMarkerOn editor, details, text
-      @markers[file].push { details: details, text: text, marker: marker }
+    if editorsFor
+      markers = []
+      for editor in editorsFor
+        markers.push @putMarkerOn(editor, details, text)
+      @markers[file].push { details: details, text: text, markers: markers }
     else
       # editor is not open
-      @markers[file].push { details: details, text: text }
+      @markers[file].push { details: details, text: text, markers: [] }
 
   # Show registered error markers on the given editor.
   putMarkersOn: (editor) ->
     allMarkers = @markers[editor.buffer.file.path] ? []
     for marker in allMarkers
-      @putMarkerOn editor, marker.details, marker.text
+      marker.markers.push @putMarkerOn(editor, marker.details, marker.text)
 
   # Shows the given error marker on a given editor
   putMarkerOn: (editor, details, text) ->
@@ -127,7 +84,8 @@ module.exports = MarkerManager =
     $('.tree-view .ht-tree-error').removeClass 'ht-tree-error'
     for file, markerFile of @markers
       for markerReg in markerFile
-          markerReg.marker?.destroy()
+        for shownMarker in markerReg.markers
+          shownMarker.destroy()
     @markers = {}
 
   # Remove all markers from files in a given package
@@ -138,7 +96,8 @@ module.exports = MarkerManager =
     for file, markerFile of @markers
       if file.startsWith(pkg)
         for markerReg in markerFile
-            markerReg.marker?.destroy()
+            for shownMarker in markerReg.markers
+              shownMarker.destroy()
         @markers[file] = []
 
   # Deregisters and removes all markers that are in a given file.
@@ -161,5 +120,6 @@ module.exports = MarkerManager =
   # Removes all error markers from a file
   removeAllMarkersFrom: (file) ->
     for markerReg in @markers[file] ? []
-      markerReg.marker?.destroy()
+      for shownMarker in markerReg.markers
+        shownMarker.destroy()
     @markers[file] = []
