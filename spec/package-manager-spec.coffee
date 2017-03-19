@@ -19,8 +19,8 @@ describe 'Haskell tools package manager', ->
       $ => # Haskell tools depends on a completely loaded dom
         path1 = path.join(__dirname, 'fixtures', 'Pkg1')
         atom.project.setPaths([path1])
-        expect($('.tree-view .header').length).toBe 1
-        expect($('.tree-view .header')).not.toHaveClass('ht-refactored-header')
+        expect($(workspaceElement).find('.tree-view .header').length).toBe 1
+        expect($(workspaceElement).find('.tree-view .header')).not.toHaveClass('ht-refactored-header')
 
   describe "adding a package to the engine", ->
     path1 = path.join(__dirname, 'fixtures', 'Pkg1')
@@ -31,11 +31,11 @@ describe 'Haskell tools package manager', ->
       $ => # Haskell tools depends on a completely loaded dom
         $('.tree-view .directory').eq(0).addClass('selected')
         atom.commands.dispatch(workspaceElement, 'haskell-tools:toggle-package')
-        expect($('.tree-view .header').eq(0)).toHaveClass('ht-refactored-header')
+        expect($(workspaceElement).find('.tree-view .header').eq(0)).toHaveClass('ht-refactored-header')
 
     it "changes the list of registered packages in the settings", ->
       $ => # Haskell tools depends on a completely loaded dom
-        $('.tree-view .directory').eq(0).addClass('selected')
+        $(workspaceElement).find('.tree-view .directory').eq(0).addClass('selected')
         atom.commands.dispatch(workspaceElement, 'haskell-tools:toggle-package')
         registered = atom.config.get('haskell-tools.refactored-packages')
         expect(registered).toEqual [path1]
@@ -44,7 +44,7 @@ describe 'Haskell tools package manager', ->
       $ => # Haskell tools depends on a completely loaded dom
         spy = jasmine.createSpy('package-client-interaction')
         packageHandler.onChange(spy)
-        $('.tree-view .directory').eq(0).addClass('selected')
+        $(workspaceElement).find('.tree-view .directory').eq(0).addClass('selected')
         atom.commands.dispatch(workspaceElement, 'haskell-tools:toggle-package')
         waitsFor ->
           spy.callCount > 0
@@ -61,10 +61,10 @@ describe 'Haskell tools package manager', ->
 
     it "remove the mark from the package in the tree view", ->
       $ => # Haskell tools depends on a completely loaded dom
-        $('.tree-view .directory').eq(0).addClass('selected')
+        $(workspaceElement).find('.tree-view .directory').eq(0).addClass('selected')
         atom.commands.dispatch(workspaceElement, 'haskell-tools:toggle-package')
         atom.commands.dispatch(workspaceElement, 'haskell-tools:toggle-package')
-        expect($('.tree-view .header')).not.toHaveClass('ht-refactored-header')
+        expect($(workspaceElement).find('.tree-view .header')).not.toHaveClass('ht-refactored-header')
 
     it "changes the list of registered packages in the settings", ->
       $ => # Haskell tools depends on a completely loaded dom
@@ -78,7 +78,7 @@ describe 'Haskell tools package manager', ->
       $ => # Haskell tools depends on a completely loaded dom
         spy = jasmine.createSpy('package-client-interaction')
         packageHandler.onChange(spy)
-        $('.tree-view .directory').eq(0).addClass('selected')
+        $(workspaceElement).find('.tree-view .directory').eq(0).addClass('selected')
         atom.commands.dispatch(workspaceElement, 'haskell-tools:toggle-package')
         waitsFor ->
           spy.callCount > 0
@@ -104,7 +104,7 @@ describe 'Haskell tools package manager', ->
       $ => # Haskell tools depends on a completely loaded dom
         spy = jasmine.createSpy('package-client-interaction')
         packageHandler.onChange(spy)
-        $('.tree-view .directory').eq(0).addClass('selected')
+        $(workspaceElement).find('.tree-view .directory').eq(0).addClass('selected')
         atom.commands.dispatch(workspaceElement, 'haskell-tools:toggle-package')
         atom.commands.dispatch(workspaceElement, 'haskell-tools:toggle-package')
         waitsFor ->
