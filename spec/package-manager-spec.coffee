@@ -1,4 +1,5 @@
 path = require 'path'
+fs = require 'fs'
 packageHandler = require '../lib/package-handler'
 {$} = require 'atom-space-pen-views'
 
