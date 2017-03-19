@@ -39,14 +39,14 @@ module.exports = StatusBar =
     @remaining = mods.filter((p) -> not p.endsWith('.hs-boot')).length
     @done = 0
     if @remaining == 0 then @setStatus "Ready"
-    else @setStatus "Reloading: 0/#{@remaining}"
+    else @setStatus "Loading (0/#{@remaining})"
 
   # Inform the user that a given module has been loaded.
   loadedData: (mods) ->
     @done += mods.length
     last = mods[mods.length-1] ? ''
     if @done >= @remaining then @setStatus "Ready"
-    else @setStatus "Load (#{@done}/#{@remaining}): #{last[1]}"
+    else @setStatus "Loading (#{@done}/#{@remaining}): #{last[1]}"
 
   setStatus: (text) ->
     if @message
