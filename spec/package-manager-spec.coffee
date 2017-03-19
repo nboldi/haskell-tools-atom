@@ -2,8 +2,6 @@ path = require 'path'
 packageHandler = require '../lib/package-handler'
 {$} = require 'atom-space-pen-views'
 
-console.log path.resolve()
-
 describe 'Haskell tools package manager', ->
   [workspaceElement] = []
 
