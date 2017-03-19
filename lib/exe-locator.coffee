@@ -1,6 +1,7 @@
 fs = require 'fs'
 path = require 'path'
 os = require 'os'
+logger = require './logger'
 
 # Module for detecting the server executable. It searches for the executable to
 # initialize the settings. It inspects a few known location depending on OS.
