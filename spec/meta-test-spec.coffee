@@ -1,5 +1,6 @@
 {$} = require('atom-space-pen-views')
 path = require 'path'
+fs = require 'fs'
 
 describe 'Meta test', ->
   [workspaceElement, statusBar, treeView] = []
@@ -17,15 +18,9 @@ describe 'Meta test', ->
   it 'finds the tree view', ->
     waitsFor -> $(workspaceElement).find('.tree-view').length > 0
 
-  it 'finds the tree view by querySelector', ->
-    waitsFor -> workspaceElement.querySelector('.tree-view')
-
   it 'finds the tree view directory header', ->
-    path1 = path.join(__dirname, 'fixtures', 'Pkg1')
+    path1 = fs.mkdtempSync 'pkg1'
+    console.log path1
     atom.project.setPaths([path1])
-    waitsFor -> $(workspaceElement).find('.tree-view .header').length > 0
-
-  it 'finds the tree view directory header by query selector', ->
-    path1 = path.join(__dirname, 'fixtures', 'Pkg1')
-    atom.project.setPaths([path1])
-    waitsFor -> workspaceElement.querySelector('.tree-view .header')
+    waitsFor ->
+      $(workspaceElement).find('.tree-view .header').length > 0

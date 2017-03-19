@@ -17,13 +17,13 @@ describe 'Haskell tools package manager', ->
   describe "@activate()", ->
     it "initially no project is added to the engine", ->
       $ => # Haskell tools depends on a completely loaded dom
-        path1 = path.join(__dirname, 'fixtures', 'Pkg1')
+        path1 = fs.mkdtempSync 'pkg1'
         atom.project.setPaths([path1])
         waitsFor -> $(workspaceElement).find('.tree-view .header').length > 0
         runs -> expect($(workspaceElement).find('.tree-view .header')).not.toHaveClass('ht-refactored-header')
-        
+
   describe "adding a package to the engine", ->
-    path1 = path.join(__dirname, 'fixtures', 'Pkg1')
+    path1 = fs.mkdtempSync 'pkg1'
     beforeEach -> $ => atom.project.setPaths([path1])
     afterEach -> packageHandler.reset()
 
@@ -54,7 +54,8 @@ describe 'Haskell tools package manager', ->
           expect(changes.removed).toEqual []
 
   describe "removing a package from the engine", ->
-    path1 = path.join(__dirname, 'fixtures', 'Pkg1')
+    path1 = fs.mkdtempSync 'pkg1'
+
 
     beforeEach -> $ => atom.project.setPaths([path1])
     afterEach -> packageHandler.reset()
@@ -95,7 +96,7 @@ describe 'Haskell tools package manager', ->
           expect(changes.removed).toEqual [path1]
 
   describe "adding and then removing a package from the engine", ->
-    path1 = path.join(__dirname, 'fixtures', 'Pkg1')
+    path1 = fs.mkdtempSync 'pkg1'
 
     beforeEach -> $ => atom.project.setPaths([path1])
     afterEach -> packageHandler.reset()
