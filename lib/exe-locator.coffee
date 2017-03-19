@@ -11,6 +11,7 @@ module.exports = ExeLocator =
 
   locateExe: () ->
     if @exeSet() then return
+    pathes = []
     switch os.platform()
       when 'win32'
         userName = process.env['USERPROFILE'].split(path.sep)[2];
@@ -19,7 +20,9 @@ module.exports = ExeLocator =
                  ]
       when 'linux'
         pathes = [ "~/.cabal/bin/ht-daemon" ]
-      else atom.notifications.addInfo("Cannot determine OS. Select ht-daemon executable manually.")
+      else
+        logger.error('Unknown OS: ' + os.platform() + '. Select ht-daemon executable manually.')
+        atom.notifications.addInfo("Cannot determine OS. Select ht-daemon executable manually.")
 
     found: false
     for path in pathes
