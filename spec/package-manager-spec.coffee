@@ -1,8 +1,5 @@
 path = require 'path'
-
-libpath = path.relative(path.resolve(), path.join(path.dirname(__dirname), 'lib', 'package-handler'))
-
-packageHandler = require libpath
+packageHandler = require '../lib/package-handler'
 {$} = require 'atom-space-pen-views'
 
 console.log path.resolve()
