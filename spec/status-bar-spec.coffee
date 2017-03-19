@@ -17,8 +17,13 @@ describe 'Haskell tools status bar', ->
 
   describe "@activate()", ->
     it "creates a status bar with text 'Disconnected'", ->
+
       # Haskell tools depends on a completely loaded dom
-      $ => expect($('status-bar .ht-status .ht-message')).toHaveText('Disconnected')
+      $ =>
+        waitsFor ->
+          $('status-bar .ht-status .ht-message').length > 0
+        runs ->
+          expect($('status-bar .ht-status .ht-message')).toHaveText('Disconnected')
 
   describe "addPackages()", ->
     it "sets the status bar message to 'Calculating'", ->
