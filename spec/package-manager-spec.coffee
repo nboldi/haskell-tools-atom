@@ -19,9 +19,9 @@ describe 'Haskell tools package manager', ->
       $ => # Haskell tools depends on a completely loaded dom
         path1 = path.join(__dirname, 'fixtures', 'Pkg1')
         atom.project.setPaths([path1])
-        expect($(workspaceElement).find('.tree-view .header').length).toBe 1
-        expect($(workspaceElement).find('.tree-view .header')).not.toHaveClass('ht-refactored-header')
-
+        waitsFor -> $(workspaceElement).find('.tree-view .header').length > 0
+        runs -> expect($(workspaceElement).find('.tree-view .header')).not.toHaveClass('ht-refactored-header')
+        
   describe "adding a package to the engine", ->
     path1 = path.join(__dirname, 'fixtures', 'Pkg1')
     beforeEach -> $ => atom.project.setPaths([path1])
