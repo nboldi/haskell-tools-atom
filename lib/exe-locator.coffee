@@ -19,7 +19,7 @@ module.exports = ExeLocator =
         pathes = [ "C:\\Users\\" + userName + "\\AppData\\Roaming\\cabal\\bin\\ht-daemon.exe"
                  , "C:\\Users\\" + userName + "\\AppData\\Roaming\\local\\bin\\ht-daemon.exe"
                  ]
-      when 'linux'
+      when 'linux' or 'darwin' or 'openbsd' or 'freebsd'
         pathes = [ "~/.cabal/bin/ht-daemon" ]
       else
         logger.error('Unknown OS: ' + os.platform() + '. Select ht-daemon executable manually.')
