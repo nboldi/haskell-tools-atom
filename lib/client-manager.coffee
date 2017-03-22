@@ -1,10 +1,12 @@
 {CompositeDisposable, Emitter} = require 'atom'
 net = require 'net'
+path = require 'path'
 NameDialog = require './name-dialog'
 markerManager = require './marker-manager'
 logger = require './logger'
 history = require './history-manager'
 statusBar = require './status-bar'
+{$} = require('atom-space-pen-views')
 
 # The component that is responsible for maintaining the connection with
 # the server.
@@ -16,11 +18,13 @@ module.exports = ClientManager =
   stopped: true # true, if disconnected from the server by the user
   jobs: [] # tasks to do after the connection has been established
   incomingMsg: '' # the part of the incoming message already received
+  renamedFile: null # The file name that is renamed
+  renamedRoot: null
 
   activate: () ->
     statusBar.activate()
     history.activate()
-    history.onUndo ([changed, removed]) => @reload changed, removed
+    history.onUndo ([added, changed, removed]) => @reload added, changed, removed
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:check-server': => @checkServer()
@@ -30,7 +34,7 @@ module.exports = ClientManager =
         packages = atom.config.get("haskell-tools.refactored-packages")
         for pack in packages
           if path.startsWith pack
-            @whenReady () => @reload [path], []
+            @whenReady () => @reload [], [path], []
             return
 
     @subscriptions.add atom.commands.onDidDispatch (event) =>
@@ -40,8 +44,17 @@ module.exports = ClientManager =
           packages = atom.config.get("haskell-tools.refactored-packages")
           for pack in packages
             if removed.startsWith pack
-              @whenReady () => @reload [], [removed]
+              @whenReady () => @reload [], [], [removed]
               return
+      if event.type == 'tree-view:move'
+        @renamedFile = event.target.getAttribute('data-path')
+        @renamedRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
+
+    @subscriptions.add atom.commands.onWillDispatch (event) =>
+      if event.type == 'core:confirm'
+        if @ready && @renamedFile
+          newPath = path.join @renamedRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
+          @reload [newPath], [], [@renamedFile]
 
     # Register refactoring commands
 
@@ -209,5 +222,5 @@ module.exports = ClientManager =
     for pkg in packages
       markerManager.removeAllMarkersFromPackage(pkg)
 
-  reload: (changed, removed) ->
-    @send { 'tag': 'ReLoad', 'changedModules': changed, 'removedModules': removed }
+  reload: (added, changed, removed) ->
+    @send { 'tag': 'ReLoad', 'addedModules': added, 'changedModules': changed, 'removedModules': removed }

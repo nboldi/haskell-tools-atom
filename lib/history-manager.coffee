@@ -28,6 +28,7 @@ module.exports = HistoryManager =
   # Takes back the last refactoring performed. Uses the undo instructions
   # sent by the server.
   undoRefactoring: () ->
+    added = []
     changed = []
     removed = []
     if @undoStack.length > 0
@@ -38,7 +39,7 @@ module.exports = HistoryManager =
            removed.push undo.undoRemovePath
          when 'RestoreRemoved'
            fs.writeFile undo.undoRestorePath, undo.undoRestoreContents
-           changed.push undo.undoRestorePath
+           added.push undo.undoRestorePath
          when 'UndoChanges'
            # restore the content of the file using a diff
            content = fs.readFileSync undo.undoChangedPath
@@ -52,7 +53,7 @@ module.exports = HistoryManager =
            fs.truncate
            fs.writeFile undo.undoChangedPath, result
            changed.push undo.undoChangedPath
-    @emitter.emit 'undo', [changed, removed]
+    @emitter.emit 'undo', [added, changed, removed]
 
   # Saves the instructions to undo the last refactoring.
   registerUndo: (undo) -> @undoStack.push undo
