@@ -1,4 +1,5 @@
 {View} = require 'space-pen'
+{$} = require 'atom-space-pen-views'
 
 # A base class for our dialogs. We use the space-pen implementation.
 module.exports = class Dialog extends View
@@ -7,10 +8,11 @@ module.exports = class Dialog extends View
     @successCallbacks = []
 
   attach: () ->
-    @panel = atom.workspace.addBottomPanel(item: this.element)
+    $(@element).addClass('ht-dialog')
+    @panel = atom.workspace.addBottomPanel(item: @element)
     @answer.focus()
     @answer.getModel().scrollToCursorPosition()
-    this.element.addEventListener 'keyup', (event) =>
+    $(@element).on 'keyup', (event) =>
       if event.key == 'Escape'
         @cancel()
       if event.key == 'Enter'

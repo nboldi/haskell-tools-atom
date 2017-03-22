@@ -3,9 +3,8 @@
 logger = require './logger'
 
 # A module for handling the packages that are registered in the Haskell Tools framework.
-module.exports = PackageHandler =
+module.exports = PackageManager =
   subscriptions: null
-  treeListener: null
   packagesRegistered: []
   emitter: new Emitter # Generates change packages events for client manager
 
@@ -17,10 +16,10 @@ module.exports = PackageHandler =
 
     @subscriptions.add atom.config.onDidChange 'haskell-tools.refactored-packages', (change) => @checkDirs(change)
 
-    @setupListeners()
+    $ => @markDirs()
+    @subscriptions.add atom.project.onDidChangePaths () => @markDirs()
 
   dispose: () ->
-    @treeListener.disconnect()
     @subscriptions.dispose()
 
   # Should be called when the server is restarted
@@ -77,27 +76,6 @@ module.exports = PackageHandler =
   # The listener should call getChanges to get the exact changes
   onChange: (callback) ->
     @emitter.on 'change', callback
-
-  # We need to know when a package that is registered in the engine is loaded
-  # to mark it as loaded.
-  # I found no way to listen to packages added to the tree view, so instead we
-  # react to the tree view being changed. But because the tree view might not
-  # be present, we have to listen for changes in the dom.
-  # Unfortunately this is not possible with jquery.
-
-  setupListeners: () ->
-    # if the tree view is active, mark the selected packages
-    @markDirs()
-    # otherwise wait for the treeview to appear and then mark the packages
-    @treeListener = new MutationObserver((mutations) => @markDirs(); @setupTreeListener());
-    panelContainers = atom.views.getView(atom.workspace).querySelectorAll('atom-panel-container')
-    for panelCont in panelContainers
-      @treeListener.observe(panelCont, { childList: true })
-
-  setupTreeListener: () ->
-    treeView = atom.views.getView(atom.workspace).querySelectorAll('.tree-view')
-    if treeView.length > 0
-      @treeListener.observe(treeView[0], { childList: true })
 
   getChanges: () ->
     packages = atom.config.get('haskell-tools.refactored-packages') ? []

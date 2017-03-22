@@ -5,8 +5,7 @@ Dialog = require './dialog'
 module.exports = class RenameDialog extends Dialog
   @content: () ->
     @div =>
-      @div 'What should be the new name?'
-      @subview 'answer', new TextEditorView(mini: true)
+      @subview 'answer', new TextEditorView(mini: true, placeholderText: 'The new name of the element')
       @div class: 'error-message', outlet: 'errorMessage'
 
   validate: () ->

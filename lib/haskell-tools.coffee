@@ -1,5 +1,5 @@
 net = require 'net'
-pkgHandler = require './package-handler'
+pkgManager = require './package-manager'
 exeLocator = require './exe-locator'
 serverManager = require './server-manager'
 clientManager = require './client-manager'
@@ -52,12 +52,12 @@ module.exports = HaskellTools =
       menuManager.disableCommand('haskell-tools:stop-server')
       menuManager.disableCommand('haskell-tools:restart-server')
       menuManager.enableCommand('haskell-tools:start-server')
-    pkgHandler.activate()
+    pkgManager.activate()
     clientManager.onConnect =>
-      pkgHandler.reconnect()
-    pkgHandler.onChange =>
+      pkgManager.reconnect()
+    pkgManager.onChange =>
       clientManager.whenReady =>
-        {added, removed} = pkgHandler.getChanges()
+        {added, removed} = pkgManager.getChanges()
         clientManager.addPackages added
         clientManager.removePackages removed
     markerManager.activate()
@@ -71,6 +71,6 @@ module.exports = HaskellTools =
     cursorManager.dispose()
     tooltipManager.dispose()
     markerManager.dispose()
-    pkgHandler.dispose()
+    pkgManager.dispose()
     clientManager.dispose()
     serverManager.dispose()

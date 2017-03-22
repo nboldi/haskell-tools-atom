@@ -36,11 +36,12 @@ module.exports = ClientManager =
     @subscriptions.add atom.commands.onDidDispatch (event) =>
       if event.type == 'tree-view:remove'
         removed = event.target.getAttribute('data-name')
-        packages = atom.config.get("haskell-tools.refactored-packages")
-        for pack in packages
-          if removed.startsWith pack
-            @whenReady () => @reload [], [removed]
-            return
+        if removed
+          packages = atom.config.get("haskell-tools.refactored-packages")
+          for pack in packages
+            if removed.startsWith pack
+              @whenReady () => @reload [], [removed]
+              return
 
     # Register refactoring commands
 
@@ -80,7 +81,7 @@ module.exports = ClientManager =
     if @ready
       return # already connected
 
-    @client = new net.Socket
+    @client = @createConnection()
     @stopped = false
     connectPort = atom.config.get("haskell-tools.connect-port")
 
@@ -107,6 +108,9 @@ module.exports = ClientManager =
       callback = () => @connect()
       setTimeout callback, 1000
 
+  createConnection: () ->
+    new net.Socket
+
   # Process an incoming message
   handleMsg: (str) ->
     try
@@ -116,7 +120,7 @@ module.exports = ClientManager =
         when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
         when "ErrorMessage" then atom.notifications.addError data.errorMsg
         when "LoadedModules"
-          markerManager.removeAllMarkersFromFiles data.loadedModules
+          markerManager.removeAllMarkersFromFiles(data.loadedModules.map ([fn,mn]) -> fn)
           statusBar.loadedData data.loadedModules
         when "LoadingModules" then statusBar.willLoadData data.modulesToLoad
         when "CompilationProblem"

@@ -8,6 +8,7 @@ module.exports = MarkerManager =
               # the editor object for putting up markers.
   markers: {} # We store the created markers for each file. Inside the file we
               # identify markers using their index in the list of all markers.
+  treeListener: null
 
   activate: () ->
     @subscriptions = new CompositeDisposable
@@ -18,12 +19,19 @@ module.exports = MarkerManager =
         else @editors[editor.buffer.file.path] = [editor]
         editor.addGutter(name: 'ht-problems', priority: 10, visible: false)
         editor.onDidDestroy () =>
-          editorIndex = @editors[editor.buffer.file.path].indexOf editor
-          @editors[editor.buffer.file.path].splice editorIndex, 1
+          if @editors[editor.buffer.file.path]
+            editorIndex = @editors[editor.buffer.file.path].indexOf editor
+            @editors[editor.buffer.file.path].splice editorIndex, 1
         @putMarkersOn editor
+    @setupListeners()
+    atom.commands.onDidDispatch (event) =>
+      if event.type == 'tree-view:toggle'
+        @setupListeners()
+        @refreshFileMarkers()
 
   dispose: () ->
     @removeAllMarkers()
+    @treeListener.disconnect()
     @subscriptions.dispose()
 
   # Gets the marker for a given marker based on the containing editor and the
@@ -40,7 +48,7 @@ module.exports = MarkerManager =
     # remove every previous marker
     for [{file},t] in errorMarkers
       if @markers[file]
-        @removeAllMarkersFrom file
+        @removeAllMarkersFromFiles [file]
     for marker in errorMarkers
       @putMarker marker
 
@@ -103,7 +111,7 @@ module.exports = MarkerManager =
   # Deregisters and removes all markers that are in a given file.
   removeAllMarkersFromFiles: (files) ->
     $('.tree-view .icon[data-path]').each (i,elem) =>
-      if $(elem).attr('data-path') in (files.map ([fn,mn]) -> fn)
+      if $(elem).attr('data-path') in files
         $(elem).removeClass 'ht-tree-error'
     $('.tree-view .header .icon[data-path]').each (i,elem) =>
       # remove markers on folders without errors in files or subfolders
@@ -114,7 +122,7 @@ module.exports = MarkerManager =
           isThereChild = true
       if not isThereChild then $(elem).removeClass 'ht-tree-error'
 
-    for [file,mn] in files
+    for file in files
       @removeAllMarkersFrom file
 
   # Removes all error markers from a file
@@ -123,3 +131,20 @@ module.exports = MarkerManager =
       for shownMarker in markerReg.markers
         shownMarker.destroy()
     @markers[file] = []
+
+  setupListeners: () ->
+    if @treeListener
+      @treeListener.disconnect()
+    @treeListener = new MutationObserver((mutations) => @refreshFileMarkers());
+    $ =>
+      if $('.tree-view')[0]
+        @treeListener.observe($('.tree-view')[0], { childList: true, subtree: true })
+
+  refreshFileMarkers: () ->
+    markedFiles = []
+    for file, markers of @markers
+      if markers.length > 0 then markedFiles.push file
+    $('.tree-view .icon[data-path]:not(.ht-tree-error)').each (i,elem) =>
+      for file in markedFiles
+        if file.startsWith $(elem).attr('data-path')
+          $(elem).addClass 'ht-tree-error'

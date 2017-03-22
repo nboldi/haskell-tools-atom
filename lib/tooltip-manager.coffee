@@ -22,7 +22,7 @@ module.exports = TooltipManager =
       tooltip = elem.children('.ht-tooltip')
       if tooltip.length > 0
         # The tooltip already exists
-        tooltip.show()
+        tooltip.removeClass('invisible')
       else
         # Creating a new tooltip for the marker
         marker = markerManager.getMarkerFromElem elem
@@ -39,12 +39,12 @@ module.exports = TooltipManager =
       clearTimeout @tooltipTimer
 
     $('atom-workspace').on 'mouseout', '.editor .ht-comp-problem', (event) =>
-      hiding = () => @lastTooltip.hide()
+      hiding = () => $(@lastTooltip).addClass('invisible')
       @tooltipTimer = setTimeout hiding, 1000
 
   hideShownTooltip: () ->
     if @lastTooltip
-      @lastTooltip.hide()
+      $(@lastTooltip).addClass('invisible')
       @lastTooltip = null
       @lastTooltipElem = null
       clearTimeout @tooltipTimer
