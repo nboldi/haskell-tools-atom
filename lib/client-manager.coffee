@@ -1,10 +1,13 @@
 {CompositeDisposable, Emitter} = require 'atom'
 net = require 'net'
+path = require 'path'
+fs = require 'fs'
 NameDialog = require './name-dialog'
 markerManager = require './marker-manager'
 logger = require './logger'
 history = require './history-manager'
 statusBar = require './status-bar'
+{$} = require('atom-space-pen-views')
 
 # The component that is responsible for maintaining the connection with
 # the server.
@@ -17,10 +20,14 @@ module.exports = ClientManager =
   jobs: [] # tasks to do after the connection has been established
   incomingMsg: '' # the part of the incoming message already received
 
+  renamedFile: null # The file name that is renamed
+  actualRoot: null # The project root of the actual tree command
+  lastTreeCommand: null # The name of the last tree command issued
+
   activate: () ->
     statusBar.activate()
     history.activate()
-    history.onUndo ([changed, removed]) => @reload changed, removed
+    history.onUndo ([added, changed, removed]) => @reload added, changed, removed
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:check-server': => @checkServer()
@@ -30,18 +37,40 @@ module.exports = ClientManager =
         packages = atom.config.get("haskell-tools.refactored-packages")
         for pack in packages
           if path.startsWith pack
-            @whenReady () => @reload [path], []
+            @whenReady () => @reload [], [path], []
             return
 
     @subscriptions.add atom.commands.onDidDispatch (event) =>
+      # console.log event.type
+      if event.type == 'tree-view:duplicate'
+        @lastTreeCommand = 'tree-view:duplicate'
+        @actualRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
+      if event.type == 'tree-view:move'
+        @renamedFile = event.target.getAttribute('data-path')
+        @actualRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
+
+    @subscriptions.add atom.commands.onWillDispatch (event) =>
       if event.type == 'tree-view:remove'
         removed = event.target.getAttribute('data-name')
         if removed
           packages = atom.config.get("haskell-tools.refactored-packages")
           for pack in packages
             if removed.startsWith pack
-              @whenReady () => @reload [], [removed]
-              return
+              if @ready then @reload [], [], [removed]
+      if event.type == 'core:confirm'
+        switch @lastTreeCommand
+          when 'tree-view:duplicate'
+            newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
+            # Wait for the file to be created
+            watcher = fs.watch path.dirname(newPath), (eventType, fileName) =>
+              if fs.existsSync newPath
+                watcher.close()
+                if @ready
+                  @reload [newPath], [], []
+          when 'tree-view:move'
+            if @ready && @renamedFile
+              newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
+              @reload [newPath], [], [@renamedFile]
 
     # Register refactoring commands
 
@@ -209,5 +238,5 @@ module.exports = ClientManager =
     for pkg in packages
       markerManager.removeAllMarkersFromPackage(pkg)
 
-  reload: (changed, removed) ->
-    @send { 'tag': 'ReLoad', 'changedModules': changed, 'removedModules': removed }
+  reload: (added, changed, removed) ->
+    @send { 'tag': 'ReLoad', 'addedModules': added, 'changedModules': changed, 'removedModules': removed }
