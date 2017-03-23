@@ -1,6 +1,7 @@
 {CompositeDisposable, Emitter} = require 'atom'
 net = require 'net'
 path = require 'path'
+fs = require 'fs'
 NameDialog = require './name-dialog'
 markerManager = require './marker-manager'
 logger = require './logger'
@@ -18,8 +19,10 @@ module.exports = ClientManager =
   stopped: true # true, if disconnected from the server by the user
   jobs: [] # tasks to do after the connection has been established
   incomingMsg: '' # the part of the incoming message already received
+  
   renamedFile: null # The file name that is renamed
-  renamedRoot: null
+  actualRoot: null # The project root of the actual tree command
+  lastTreeCommand: null # The name of the last tree command issued
 
   activate: () ->
     statusBar.activate()
@@ -38,6 +41,15 @@ module.exports = ClientManager =
             return
 
     @subscriptions.add atom.commands.onDidDispatch (event) =>
+      # console.log event.type
+      if event.type == 'tree-view:duplicate'
+        @lastTreeCommand = 'tree-view:duplicate'
+        @actualRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
+      if event.type == 'tree-view:move'
+        @renamedFile = event.target.getAttribute('data-path')
+        @actualRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
+
+    @subscriptions.add atom.commands.onWillDispatch (event) =>
       if event.type == 'tree-view:remove'
         removed = event.target.getAttribute('data-name')
         if removed
@@ -46,15 +58,19 @@ module.exports = ClientManager =
             if removed.startsWith pack
               @whenReady () => @reload [], [], [removed]
               return
-      if event.type == 'tree-view:move'
-        @renamedFile = event.target.getAttribute('data-path')
-        @renamedRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
-
-    @subscriptions.add atom.commands.onWillDispatch (event) =>
       if event.type == 'core:confirm'
-        if @ready && @renamedFile
-          newPath = path.join @renamedRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
-          @reload [newPath], [], [@renamedFile]
+        switch @lastTreeCommand
+          when 'tree-view:duplicate'
+            newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
+            # Wait for the file to be created
+            watcher = fs.watch path.dirname(newPath), (eventType, fileName) =>
+              if fs.existsSync newPath
+                watcher.close()
+                @reload [newPath], [], []
+          when 'tree-view:move'
+            if @ready && @renamedFile
+              newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
+              @reload [newPath], [], [@renamedFile]
 
     # Register refactoring commands
 
