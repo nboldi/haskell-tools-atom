@@ -19,7 +19,7 @@ module.exports = ClientManager =
   stopped: true # true, if disconnected from the server by the user
   jobs: [] # tasks to do after the connection has been established
   incomingMsg: '' # the part of the incoming message already received
-  
+
   renamedFile: null # The file name that is renamed
   actualRoot: null # The project root of the actual tree command
   lastTreeCommand: null # The name of the last tree command issued
@@ -56,8 +56,7 @@ module.exports = ClientManager =
           packages = atom.config.get("haskell-tools.refactored-packages")
           for pack in packages
             if removed.startsWith pack
-              @whenReady () => @reload [], [], [removed]
-              return
+              if @ready then @reload [], [], [removed]
       if event.type == 'core:confirm'
         switch @lastTreeCommand
           when 'tree-view:duplicate'
@@ -66,7 +65,8 @@ module.exports = ClientManager =
             watcher = fs.watch path.dirname(newPath), (eventType, fileName) =>
               if fs.existsSync newPath
                 watcher.close()
-                @reload [newPath], [], []
+                if @ready
+                  @reload [newPath], [], []
           when 'tree-view:move'
             if @ready && @renamedFile
               newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
