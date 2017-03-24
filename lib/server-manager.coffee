@@ -23,7 +23,7 @@ module.exports = ServerManager =
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:restart-server': => @restart()
 
-    autoStart = atom.config.get("haskell-tools:start-automatically")
+    autoStart = atom.config.get("haskell-tools.start-automatically")
     if autoStart
       @start()
 
