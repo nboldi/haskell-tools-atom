@@ -112,12 +112,12 @@ describe 'Haskell tools marker manager', ->
           expect($('.highlight.ht-comp-problem').length).toBe 0
 
   describe 'In the tree view', ->
-    [filePath,problemLoc,editor] = []
+    [filePath,rootPath,problemLoc,editor] = []
 
     beforeEach ->
-      path1 = path.resolve(fs.mkdtempSync 'pkg1-')
-      atom.project.setPaths [path1]
-      filePath = path.join(path1,'A.hs')
+      rootPath = path.resolve(fs.mkdtempSync 'pkg1-')
+      atom.project.setPaths [rootPath]
+      filePath = path.join(rootPath,'A.hs')
       fs.writeFileSync(filePath, wrongMod)
       problemLoc = {file: filePath, startRow: 2, startCol: 5, endRow: 2, endCol: 6}
 
@@ -167,4 +167,22 @@ describe 'Haskell tools marker manager', ->
           markerManager.putMarker [problemLoc, 'Name not in scope: x']
           expect($('.ht-tree-error').length).toBe 2
           markerManager.removeAllMarkersFromFiles [filePath]
+          expect($('.ht-tree-error').length).toBe 0
+
+    describe "@removeAllMarkersFromFiles()", ->
+      it "does not remove the markers from the tree view while any file is marked", ->
+        filePath2 = path.join(rootPath,'B.hs')
+        fs.writeFileSync(filePath2, wrongMod)
+        problem2Loc = {file: filePath2, startRow: 2, startCol: 5, endRow: 2, endCol: 6}
+        waitsForPromise ->
+          atom.workspace.open filePath
+        waitsForPromise ->
+          atom.workspace.open filePath2
+        runs ->
+          markerManager.putMarker [problemLoc, 'Name not in scope: x']
+          markerManager.putMarker [problem2Loc, 'Name not in scope: x']
+          expect($('.ht-tree-error').length).toBe 3
+          markerManager.removeAllMarkersFromFiles [filePath]
+          expect($('.ht-tree-error').length).toBe 2
+          markerManager.removeAllMarkersFromFiles [filePath2]
           expect($('.ht-tree-error').length).toBe 0
