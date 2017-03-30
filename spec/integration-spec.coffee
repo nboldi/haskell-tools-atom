@@ -16,15 +16,10 @@ b = 5
 
 
 describe 'The haskell-tools plugin', ->
-  [workspaceElement,sockOn,sockWrite,sockConn,sockDestroy] = []
+  [workspaceElement,rootPath,sockOn,sockWrite,sockConn,sockDestroy,filePath,escapedPath,escapedFilePath] = []
 
   beforeEach ->
     workspaceElement = atom.views.getView(atom.workspace)
-
-    # server = net.createServer (socket) =>
-    #   console.log 'client connected'
-    #   socket.on 'data', data -> console.log
-    # server.listen(4123) # default port
 
     waitsForPromise ->
       atom.packages.activatePackage('status-bar')
@@ -32,20 +27,7 @@ describe 'The haskell-tools plugin', ->
       atom.packages.activatePackage('tree-view')
     waitsForPromise ->
       jasmine.attachToDOM(workspaceElement)
-      atom.packages.activatePackage('haskell-tools')
-
-  it 'should be able to refactor a file', ->
-    $ =>
-      rootPath = path.resolve(fs.mkdtempSync 'pkg1-')
-      escapedPath = rootPath.replace /\\/g, '\\\\'
-      atom.project.setPaths [rootPath]
-      filePath = path.join(rootPath,'A.hs')
-      escapedFilePath = filePath.replace /\\/g, '\\\\'
-      fs.writeFileSync(filePath, goodMod)
-      waitsForPromise ->
-        atom.workspace.open(filePath).then (editor) ->
-          editor.setSelectedBufferRange [[1,0],[1,1]]
-      runs ->
+      atom.packages.activatePackage('haskell-tools').then () ->
         # Mock the socket communication in clientManager
         clientManager.createConnection = () -> {
           connect: sockConn = jasmine.createSpy('socket.connect'),
@@ -53,49 +35,81 @@ describe 'The haskell-tools plugin', ->
           write: sockWrite = jasmine.createSpy('socket.write')
           destroy: sockDestroy = jasmine.createSpy('socket.destroy')
         }
-        clientManager.connect()
-        expect(sockConn).toHaveBeenCalled()
-        connCallback = sockConn.calls[sockConn.calls.length - 1].args[2]
-        connCallback()
-        expect(sockOn).toHaveBeenCalled()
-        dataCbs = []
-        for {args:[event,callback]} in sockOn.calls
-          switch event
-            when 'data' then dataCbs.push callback
-        atom.project.setPaths [rootPath]
-        $('.tree-view .directory').eq(0).addClass('selected')
-        atom.commands.dispatch(workspaceElement, 'haskell-tools:toggle-package')
-        expect(sockWrite).toHaveBeenCalledWith """{"tag":"AddPackages","addedPathes":["#{escapedPath}"]}"""
-        expect($('.ht-message').text()).toBe 'Calculating'
-        # Send loading modules message to the client
-        for callback in dataCbs
-          callback("""{"tag":"LoadingModules","modulesToLoad":["#{escapedFilePath}"]}""")
-        expect($('.ht-message').text()).toBe 'Loading (0/1)'
-        # Send loaded modules message to the client
-        for callback in dataCbs
-          callback("""{"tag":"LoadedModules","loadedModules":[["#{escapedFilePath}","A"]]}""")
-        expect($('.ht-message').text()).toBe 'Ready'
+    rootPath = path.resolve(fs.mkdtempSync 'pkg1-')
+    escapedPath = rootPath.replace /\\/g, '\\\\'
+    atom.project.setPaths [rootPath]
+    filePath = path.join(rootPath,'A.hs')
+    escapedFilePath = filePath.replace /\\/g, '\\\\'
+    fs.writeFileSync(filePath, goodMod)
+    waitsForPromise ->
+      atom.workspace.open(filePath).then (editor) ->
+        editor.setSelectedBufferRange [[1,0],[1,1]]
 
-        expect($('.header.ht-refactored-header').length).toBe 1
-        atom.commands.dispatch(workspaceElement, 'haskell-tools:refactor:rename-definition')
-        # fill the name dialog and press enter
-        $('atom-text-editor.mini')[0].model.setText('b')
-        # $('.ht-dialog hidden-input').text('b')
-        expect($('.ht-dialog').length).toBe 1
-        e = $.Event('keyup')
-        e.key = 'Enter'
-        $('.ht-dialog').trigger(e)
-        expect($('.ht-dialog').length).toBe 0
+  it 'should be able to refactor a file', ->
+    $ =>
+      clientManager.connect()
+      expect(sockConn).toHaveBeenCalled()
+      mockReceive = mockConnection(sockConn, sockOn)
+      expect(sockOn).toHaveBeenCalled()
+      atom.project.setPaths [rootPath]
+      $('.tree-view .directory').eq(0).addClass('selected')
+      atom.commands.dispatch(workspaceElement, 'haskell-tools:toggle-package')
+      expect(sockWrite).toHaveBeenCalledWith """{"tag":"AddPackages","addedPathes":["#{escapedPath}"]}"""
+      expect($('.ht-message').text()).toBe 'Calculating'
+      # Send loading modules message to the client
+      mockReceive("""{"tag":"LoadingModules","modulesToLoad":["#{escapedFilePath}"]}""")
+      expect($('.ht-message').text()).toBe 'Loading (0/1)'
+      # Send loaded modules message to the client
+      mockReceive("""{"tag":"LoadedModules","loadedModules":[["#{escapedFilePath}","A"]]}""")
+      expect($('.ht-message').text()).toBe 'Ready'
 
-        expect(sockWrite).toHaveBeenCalledWith """{"tag":"PerformRefactoring","refactoring":"RenameDefinition","modulePath":"#{escapedFilePath}","editorSelection":"2:1-2:2","details":["b"]}"""
-        expect($('.ht-message').text()).toBe 'Refactoring'
+      expect($('.header.ht-refactored-header').length).toBe 1
+      atom.commands.dispatch(workspaceElement, 'haskell-tools:refactor:rename-definition')
+      # fill the name dialog and press enter
+      $('atom-text-editor.mini')[0].model.setText('b')
+      # $('.ht-dialog hidden-input').text('b')
+      expect($('.ht-dialog').length).toBe 1
+      pressEnter $('.ht-dialog')
+      expect($('.ht-dialog').length).toBe 0
 
-        fs.writeFileSync(filePath, refactoredMod)
-        # Send loading modules message to the client
-        for callback in dataCbs
-          callback("""{"tag":"LoadingModules","modulesToLoad":["#{escapedFilePath}"]}""")
-        expect($('.ht-message').text()).toBe 'Loading (0/1)'
-        # Send loaded modules message to the client
-        for callback in dataCbs
-          callback("""{"tag":"LoadedModules","loadedModules":[["#{escapedFilePath}","A"]]}""")
-        expect($('.ht-message').text()).toBe 'Ready'
+      expect(sockWrite).toHaveBeenCalledWith """{"tag":"PerformRefactoring","refactoring":"RenameDefinition","modulePath":"#{escapedFilePath}","editorSelection":"2:1-2:2","details":["b"]}"""
+      expect($('.ht-message').text()).toBe 'Refactoring'
+
+      fs.writeFileSync(filePath, refactoredMod)
+      # Send loading modules message to the client
+      mockReceive("""{"tag":"LoadingModules","modulesToLoad":["#{escapedFilePath}"]}""")
+      expect($('.ht-message').text()).toBe 'Loading (0/1)'
+      # Send loaded modules message to the client
+      mockReceive("""{"tag":"LoadedModules","loadedModules":[["#{escapedFilePath}","A"]]}""")
+      expect($('.ht-message').text()).toBe 'Ready'
+
+  it 'should be able to handle move operation', ->
+    $ =>
+      clientManager.connect()
+      mockReceive = mockConnection(sockConn, sockOn)
+      $('.icon[data-path]').each (i,elem) =>
+        if $(elem).attr('data-path') == filePath
+          atom.commands.dispatch(elem, 'tree-view:move')
+          editorElem = $('.tree-view-dialog atom-text-editor')[0]
+          nameEditor = editorElem.model
+          nameEditor.setText 'B.hs'
+          # spv = $('.tree-view-dialog')[0].spacePenView
+          atom.commands.dispatch($('.tree-view-dialog atom-text-editor')[0], 'core:confirm')
+      escapedNewFilePath = path.join(rootPath,'B.hs').replace /\\/g, '\\\\'
+      expect(sockWrite).toHaveBeenCalledWith """{"tag":"ReLoad","addedModules":["#{escapedNewFilePath}"],"changedModules":[],"removedModules":["#{escapedFilePath}"]}"""
+
+pressEnter = (elem) ->
+  e = $.Event('keyup')
+  e.key = 'Enter'
+  elem.trigger(e)
+
+mockConnection = (connMock, onMock) ->
+  connCallback = connMock.calls[connMock.calls.length - 1].args[2]
+  connCallback()
+  dataCallbacks = []
+  for {args:[event,callback]} in onMock.calls
+    switch event
+      when 'data' then dataCallbacks.push callback
+  (msg) =>
+    for callback in dataCallbacks
+      callback(msg)
