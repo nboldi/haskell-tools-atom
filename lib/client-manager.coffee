@@ -45,19 +45,33 @@ module.exports = ClientManager =
         @lastTreeCommand = 'tree-view:duplicate'
         @actualRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
       if event.type == 'tree-view:move'
+        @lastTreeCommand = 'tree-view:move'
         @renamedFile = event.target.getAttribute('data-path')
         @actualRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
-
-    @subscriptions.add atom.commands.onWillDispatch (event) =>
+      if event.type == 'tree-view:add-file'
+        @lastTreeCommand = 'tree-view:add-file'
+        @actualRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
       if event.type == 'tree-view:remove'
-        removed = event.target.getAttribute('data-name')
+        removed = event.target.getAttribute('data-path')
         if removed
           packages = atom.config.get("haskell-tools.refactored-packages")
+          # what if the package is inside?
           for pack in packages
             if removed.startsWith pack
               if @ready then @reload [], [], [removed]
+
+    @subscriptions.add atom.commands.onWillDispatch (event) =>
+      # need to do before deleting, otherwise it is hard to figure out where it was
       if event.type == 'core:confirm'
         switch @lastTreeCommand
+          when 'tree-view:add-file'
+            newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
+            # Wait for the file to be created
+            watcher = fs.watch path.dirname(newPath), (eventType, fileName) =>
+              if fs.existsSync newPath
+                watcher.close()
+                if @ready
+                  @reload [newPath], [], []
           when 'tree-view:duplicate'
             newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
             # Wait for the file to be created
