@@ -93,11 +93,13 @@ describe 'The haskell-tools plugin', ->
           editorElem = $('.tree-view-dialog atom-text-editor')[0]
           nameEditor = editorElem.model
           nameEditor.setText 'B.hs'
-          # spv = $('.tree-view-dialog')[0].spacePenView
           atom.commands.dispatch($('.tree-view-dialog atom-text-editor')[0], 'core:confirm')
       escapedNewFilePath = path.join(rootPath,'B.hs').replace /\\/g, '\\\\'
       expect(sockWrite).toHaveBeenCalledWith """{"tag":"ReLoad","addedModules":["#{escapedNewFilePath}"],"changedModules":[],"removedModules":["#{escapedFilePath}"]}"""
 
+  # remove cannot be tested because of the modal popup, with duplicate there
+  # is a problem about watching for the file to exist
+  
 pressEnter = (elem) ->
   e = $.Event('keyup')
   e.key = 'Enter'
