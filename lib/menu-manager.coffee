@@ -12,6 +12,6 @@ module.exports = MenuManager =
 
   updateCommand: (command, menu, op) ->
     for elem in menu
-      if elem.command == command
+      if elem.command && elem.command.match RegExp(command)
         op(elem)
       if elem.submenu then @updateCommand(command, elem.submenu, op)

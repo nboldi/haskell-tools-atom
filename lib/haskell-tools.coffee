@@ -37,6 +37,9 @@ module.exports = HaskellTools =
       default: 'false'
 
   activate: (state) ->
+    # disable commands in case the activation is not successful
+    menuManager.disableCommand('haskell-tools:.*')
+
     logger.log 'Haskell-tools plugin is activated'
     exeLocator.locateExe()
     serverManager.activate() # must go before pkgHandler, because it activates client manager that pkg handler uses
@@ -47,11 +50,13 @@ module.exports = HaskellTools =
       menuManager.enableCommand('haskell-tools:stop-server')
       menuManager.enableCommand('haskell-tools:restart-server')
       menuManager.disableCommand('haskell-tools:start-server')
+      menuManager.enableCommand('haskell-tools:refactor:.*')
     serverManager.onStopped =>
       clientManager.disconnect()
       menuManager.disableCommand('haskell-tools:stop-server')
       menuManager.disableCommand('haskell-tools:restart-server')
       menuManager.enableCommand('haskell-tools:start-server')
+      menuManager.disableCommand('haskell-tools:refactor:.*')
     pkgManager.activate()
     clientManager.onConnect =>
       pkgManager.reconnect()
@@ -63,8 +68,9 @@ module.exports = HaskellTools =
     markerManager.activate()
     tooltipManager.activate()
     cursorManager.activate()
-    menuManager.disableCommand('haskell-tools:stop-server')
-    menuManager.disableCommand('haskell-tools:restart-server')
+
+    menuManager.enableCommand('haskell-tools:start-server')
+
 
   deactivate: ->
     logger.log 'Haskell-tools plugin is deactivated'

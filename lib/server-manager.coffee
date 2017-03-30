@@ -33,8 +33,9 @@ module.exports = ServerManager =
 
   restart: () ->
     @stop()
-    # setting this will re-start the server when we are notified of the termination
-    @running = true
+    emit = @subproc.on 'close', =>
+      @start()
+      emit.dispose()
 
   # Starts the executable.
   start: () ->
@@ -61,7 +62,7 @@ module.exports = ServerManager =
       # restart the server if it was not intentionally closed
       if @running
         @running = false
-        atom.notifications.addError("Unfortunately the server crashed.")
+        atom.notifications.addError("Unfortunately the server crashed. Restarting.")
         @start()
     );
     @emitter.emit 'started'

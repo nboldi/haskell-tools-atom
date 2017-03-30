@@ -113,15 +113,10 @@ module.exports = MarkerManager =
     $('.tree-view .icon[data-path]').each (i,elem) =>
       if $(elem).attr('data-path') in files
         $(elem).removeClass 'ht-tree-error'
-    $('.tree-view .header .icon[data-path]').each (i,elem) =>
-      # remove markers on folders without errors in files or subfolders
-      # depends on bottom-up traversal
-      isThereChild = false
-      $(elem).children().each (i,child) =>
-        if $(child).hasClass 'ht-tree-error'
-          isThereChild = true
-      if not isThereChild then $(elem).removeClass 'ht-tree-error'
-
+    $('.directory').each (i,elem) =>
+      # remove markers on folders without errors in files
+      if $(elem).find('.file .ht-tree-error').length == 0
+        $(elem).children('.header').find('.icon').removeClass 'ht-tree-error'
     for file in files
       @removeAllMarkersFrom file
 

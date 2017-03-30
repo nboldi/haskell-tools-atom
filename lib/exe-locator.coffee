@@ -20,7 +20,7 @@ module.exports = ExeLocator =
                  , "C:\\Users\\" + userName + "\\AppData\\Roaming\\local\\bin\\ht-daemon.exe"
                  ]
       when 'linux', 'darwin', 'openbsd', 'freebsd'
-        pathes = [ "~/.cabal/bin/ht-daemon" ]
+        pathes = [ "~/.local/bin/ht-daemon", "~/.cabal/bin/ht-daemon" ]
       else
         logger.error('Unknown OS: ' + os.platform() + '. Select ht-daemon executable manually.')
         atom.notifications.addInfo("Cannot determine OS. Select ht-daemon executable manually.")

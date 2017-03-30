@@ -1,4 +1,5 @@
 {CompositeDisposable,Emitter} = require 'atom'
+menuManager = require './menu-manager'
 fs = require 'fs'
 
 # Keeps track of performed refactorings, can undo them. This is needed because
@@ -18,6 +19,7 @@ module.exports = HistoryManager =
       # If they were, we won't have to delete the refactor history on every save.
       @subscriptions.add editor.onDidSave ({path}) =>
         @undoStack = []
+        @disableMenuItem()
 
   # The callback is activated when a refactoring is undone.
   # The callback receives [changed, removed] where changed is the
@@ -51,12 +53,22 @@ module.exports = HistoryManager =
              lastPos = nextPos
            result = Buffer.concat [result, content.slice(lastPos)]
            fs.truncate
-           fs.writeFile undo.undoChangedPath, result
+           fs.writeFileSync undo.undoChangedPath, result
            changed.push undo.undoChangedPath
     @emitter.emit 'undo', [added, changed, removed]
+    if @undoStack.length == 0
+      menuManager.disableCommand('haskell-tools:undo-refactoring')
 
   # Saves the instructions to undo the last refactoring.
-  registerUndo: (undo) -> @undoStack.push undo
+  registerUndo: (undo) ->
+    @undoStack.push undo
+    @enableMenuItem()
+
+  disableMenuItem: () ->
+    menuManager.disableCommand('haskell-tools:undo-refactoring')
+
+  enableMenuItem: () ->
+    menuManager.enableCommand('haskell-tools:undo-refactoring')
 
   dispose: () ->
     @subscriptions.dispose()

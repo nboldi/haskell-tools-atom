@@ -78,7 +78,6 @@ describe 'The haskell-tools plugin', ->
 
         expect($('.header.ht-refactored-header').length).toBe 1
         atom.commands.dispatch(workspaceElement, 'haskell-tools:refactor:rename-definition')
-        console.log atom.workspace.getTextEditors()
         # fill the name dialog and press enter
         $('atom-text-editor.mini')[0].model.setText('b')
         # $('.ht-dialog hidden-input').text('b')

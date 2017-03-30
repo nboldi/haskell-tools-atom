@@ -41,7 +41,6 @@ module.exports = ClientManager =
             return
 
     @subscriptions.add atom.commands.onDidDispatch (event) =>
-      # console.log event.type
       if event.type == 'tree-view:duplicate'
         @lastTreeCommand = 'tree-view:duplicate'
         @actualRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
@@ -202,7 +201,7 @@ module.exports = ClientManager =
     if @ready
       @client.write JSON.stringify(data)
       @client.write '\n'
-    else atom.notifications.addError("Haskell-tools: Server is not ready")
+    else atom.notifications.addError("Haskell-tools: Server is not ready. Start the server first.")
 
   # These functions send commands to the server on user
 
