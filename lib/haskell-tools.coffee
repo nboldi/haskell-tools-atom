@@ -1,4 +1,4 @@
-net = require 'net'
+{CompositeDisposable} = require 'atom'
 pkgManager = require './package-manager'
 exeLocator = require './exe-locator'
 serverManager = require './server-manager'
@@ -12,6 +12,7 @@ logger = require './logger'
 # Main module for the plugin. Contains the packages configuration and
 # activates/deactivates other modules.
 module.exports = HaskellTools =
+  subscriptions: null
   config:
     'start-automatically':
       type: 'boolean'
@@ -37,8 +38,14 @@ module.exports = HaskellTools =
       default: 'false'
 
   activate: (state) ->
+    @subscriptions = new CompositeDisposable
+
+    @subscriptions.add atom.commands.add 'atom-workspace',
+      'haskell-tools:reset-plugin': => @resetPlugin()
+
     # disable commands in case the activation is not successful
     menuManager.disableCommand('haskell-tools:.*')
+    menuManager.enableCommand('haskell-tools:reset-plugin')
 
     logger.log 'Haskell-tools plugin is activated'
     exeLocator.locateExe()
@@ -80,3 +87,9 @@ module.exports = HaskellTools =
     pkgManager.dispose()
     clientManager.dispose()
     serverManager.dispose()
+    subscriptions.dispose()
+
+  resetPlugin: ->
+    for name, settings of @config
+      atom.config.set("haskell-tools.#{name}", settings.default)
+    exeLocator.locateExe()

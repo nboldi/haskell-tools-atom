@@ -56,7 +56,6 @@ module.exports = MarkerManager =
   # Registers the given error marker, shows if possible
   putMarker: ([details,text]) ->
     file = details.file.replace /\\|\//g, path.sep
-    console.log file
     editorsFor = @editors[file]
     $('.tree-view .icon[data-path]').each (i,elem) =>
       if file.startsWith $(elem).attr('data-path')
