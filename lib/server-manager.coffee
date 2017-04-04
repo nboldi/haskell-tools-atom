@@ -33,9 +33,7 @@ module.exports = ServerManager =
 
   restart: () ->
     @stop()
-    emit = @subproc.on 'close', =>
-      @start()
-      emit.dispose()
+    @subproc.once 'close', => @start()
 
   # Starts the executable.
   start: () ->
