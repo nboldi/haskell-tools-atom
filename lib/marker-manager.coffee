@@ -58,7 +58,7 @@ module.exports = MarkerManager =
     file = details.file.replace /\\|\//g, path.sep
     editorsFor = @editors[file]
     $('.tree-view .icon[data-path]').each (i,elem) =>
-      if file.startsWith $(elem).attr('data-path')
+      if file.startsWith($(elem).attr('data-path') + path.sep) || file == $(elem).attr('data-path')
         $(elem).addClass 'ht-tree-error'
     if not @markers[file]
       @markers[file] = []
