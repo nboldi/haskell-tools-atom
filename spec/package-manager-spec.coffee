@@ -120,13 +120,3 @@ describe 'Haskell tools package manager', ->
           changes = packageHandler.getChanges()
           expect(changes.added).toEqual []
           expect(changes.removed).toEqual []
-
-  describe "adding a package to the engine", ->
-    it "is marked after added to the project", ->
-      path1 = path.resolve(fs.mkdtempSync 'pkg1-')
-      atom.config.set('haskell-tools.refactored-packages', [path1])
-      atom.project.setPaths [path1]
-      waitsFor ->
-        $('.tree-view .header').length > 0
-      runs ->
-        expect($('.tree-view .header')).toHaveClass('ht-refactored-header')

@@ -6,6 +6,7 @@ logger = require './logger'
 module.exports = PackageManager =
   subscriptions: null
   packagesRegistered: []
+  treeListener: null
   emitter: new Emitter # Generates change packages events for client manager
 
   activate: () ->
@@ -15,11 +16,14 @@ module.exports = PackageManager =
       'haskell-tools:toggle-package', (event) => @toggleDir(event)
 
     @subscriptions.add atom.config.onDidChange 'haskell-tools.refactored-packages', (change) => @checkDirs(change)
+    @setupListeners()
 
     $ => @markDirs()
-    @subscriptions.add atom.project.onDidChangePaths () => @markDirs()
+    @subscriptions.add atom.project.onDidChangePaths () =>
+      @filterDirs()
 
   dispose: () ->
+    @treeListener.disconnect()
     @subscriptions.dispose()
 
   # Should be called when the server is restarted
@@ -31,13 +35,16 @@ module.exports = PackageManager =
     @packagesRegistered = []
     atom.config.set('haskell-tools.refactored-packages', [])
 
-  # Mark the directories in the tree view, that are added to Haskell Tools with the class .ht-refactored
-  markDirs: () ->
+  filterDirs: () ->
     packages = atom.config.get('haskell-tools.refactored-packages')
-    $('.tree-view .header .icon[data-path]').each (i,elem) =>
-      if $(elem).attr('data-path') in packages
-        $(elem).addClass('ht-refactored')
-        $(elem).closest('.header').addClass('ht-refactored-header')
+    # Keep only those directories that are in the paths
+    for name in packages
+      existing = false
+      for path in atom.project.getPaths()
+        if name.startsWith path
+          existing = true
+      if !existing
+        @setDir name, false
 
   # Register or unregister the given directory in the Haskell Tools framework. This perform both the registration and the associated view changes.
   setDir: (directoryPath, added) ->
@@ -84,3 +91,19 @@ module.exports = PackageManager =
     removedPackages = @packagesRegistered.filter (x) => not (x in packages)
     @packagesRegistered = packages
     { added: newPackages, removed: removedPackages }
+
+  setupListeners: () ->
+    if @treeListener
+      @treeListener.disconnect()
+    @treeListener = new MutationObserver((mutations) => @markDirs());
+    $ =>
+      if $('.tree-view')[0]
+        @treeListener.observe($('.tree-view')[0], { childList: true, subtree: true })
+
+  # Mark the directories in the tree view, that are added to Haskell Tools with the class .ht-refactored
+  markDirs: () ->
+    packages = atom.config.get('haskell-tools.refactored-packages')
+    $('.tree-view .header .icon[data-path]').each (i,elem) =>
+      if $(elem).attr('data-path') in packages
+        $(elem).addClass('ht-refactored')
+        $(elem).closest('.header').addClass('ht-refactored-header')

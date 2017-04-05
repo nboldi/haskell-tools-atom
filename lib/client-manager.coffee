@@ -243,13 +243,16 @@ module.exports = ClientManager =
     statusBar.performRefactoring()
 
   addPackages: (packages) ->
-    @send { 'tag': 'AddPackages', 'addedPathes': packages }
-    statusBar.addPackages()
+    if packages.length > 0
+      @send { 'tag': 'AddPackages', 'addedPathes': packages }
+      statusBar.addPackages()
 
   removePackages: (packages) ->
-    @send { 'tag': 'RemovePackages', 'removedPathes': packages }
-    for pkg in packages
-      markerManager.removeAllMarkersFromPackage(pkg)
+    if packages.length > 0
+      @send { 'tag': 'RemovePackages', 'removedPathes': packages }
+      for pkg in packages
+        markerManager.removeAllMarkersFromPackage(pkg)
 
   reload: (added, changed, removed) ->
-    @send { 'tag': 'ReLoad', 'addedModules': added, 'changedModules': changed, 'removedModules': removed }
+    if added.length + changed.length + removed.length > 0
+      @send { 'tag': 'ReLoad', 'addedModules': added, 'changedModules': changed, 'removedModules': removed }
