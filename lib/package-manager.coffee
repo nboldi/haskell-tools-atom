@@ -8,6 +8,7 @@ module.exports = PackageManager =
   packagesRegistered: []
   treeListener: null
   emitter: new Emitter # Generates change packages events for client manager
+  updating: false # true, if currently running an update, so config change events are ignored
 
   activate: () ->
     @subscriptions = new CompositeDisposable
@@ -46,8 +47,7 @@ module.exports = PackageManager =
       if !existing
         @setDir name, false
 
-  # Register or unregister the given directory in the Haskell Tools framework. This perform both the registration and the associated view changes.
-  setDir: (directoryPath, added) ->
+  updateDir: (directoryPath, added) ->
     # update the view
     $('.tree-view .header .icon[data-path="' + directoryPath.replace(/\\/g, "\\\\") + '"]').each (i,elem) =>
       if $(elem).hasClass('ht-refactored') != added
@@ -60,6 +60,10 @@ module.exports = PackageManager =
     if added then (packages.push(directoryPath) if !(directoryPath in packages)) else packages = packages.filter (d) -> d isnt directoryPath
     atom.config.set('haskell-tools.refactored-packages', packages)
     atom.notifications.addSuccess("The folder " + directoryName + " have been " + (if added then "added to" else "removed from") + " Haskell Tools Refact")
+
+  # Register or unregister the given directory in the Haskell Tools framework. This perform both the registration and the associated view changes.
+  setDir: (directoryPath, added) ->
+    @updateDir(directoryPath, added)
     @emitter.emit 'change'
 
   # Reacts to context menu right clicks
@@ -69,11 +73,15 @@ module.exports = PackageManager =
     $('.tree-view .directory.selected > .header .icon[data-path]').each (i,elem) =>
       directoryPathes.push $(elem).attr('data-path')
     packages = atom.config.get('haskell-tools.refactored-packages')
+    @updating = true
     for directoryPath in directoryPathes
-      @setDir(directoryPath, !(directoryPath in packages))
+      @updateDir(directoryPath, !(directoryPath in packages))
+    @updating = false
+    @emitter.emit 'change'
 
   # When the configuration changes, check which directories should be added/removed
   checkDirs: (change) ->
+    return if @updating
     for dir in change.newValue
       if !(dir in change.oldValue) then @setDir(dir, true)
     for dir in change.oldValue
