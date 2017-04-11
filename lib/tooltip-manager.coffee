@@ -31,7 +31,7 @@ module.exports = TooltipManager =
         tooltip = elem.children('.ht-tooltip')
         if marker.text
           # Calculate a good width for the new tooltip
-          tooltip.width(200 + Math.min(200, marker.text.length * 2))
+          tooltip.css('min-width', 200 + Math.min(200, marker.text.length * 2))
       @lastTooltip = tooltip
       @lastTooltipElem = elem
 
