@@ -47,14 +47,17 @@ module.exports = MarkerManager =
   # Register the given error markers and remove already existing
   setErrorMarkers: (errorMarkers) ->
     # remove every previous marker
-    for [{file},t] in errorMarkers
-      if @markers[file]
-        @removeAllMarkersFromFiles [file]
+    for [details,text] in errorMarkers
+      if details && @markers[details.file]
+        @removeAllMarkersFromFiles [details.file]
     for marker in errorMarkers
       @putMarker marker
 
   # Registers the given error marker, shows if possible
   putMarker: ([details,text]) ->
+    if !details
+      atom.notifications.addError ("error: #{text}")
+      return
     file = details.file.replace /\\|\//g, path.sep
     editorsFor = @editors[file]
     $('.tree-view .icon[data-path]').each (i,elem) =>
