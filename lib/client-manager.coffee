@@ -24,6 +24,9 @@ module.exports = ClientManager =
   actualRoot: null # The project root of the actual tree command
   lastTreeCommand: null # The name of the last tree command issued
 
+  serverVersionLowerBound: [0,6,0,0] # inclusive minimum of server version
+  serverVersionUpperBound: [0,7,0,0] # exclusive upper limit of server version
+
   activate: () ->
     statusBar.activate()
     history.activate()
@@ -110,6 +113,7 @@ module.exports = ClientManager =
 
     autoStart = atom.config.get("haskell-tools.start-automatically")
 
+    @emitter.on 'connect', () => @shakeHands()
     @emitter.on 'connect', () => @executeJobs()
     @emitter.on 'connect', () => statusBar.connected()
     @emitter.on 'disconnect', () => statusBar.disconnected()
@@ -170,6 +174,11 @@ module.exports = ClientManager =
           statusBar.compilationProblem()
         when "ModulesChanged" then history.registerUndo(data.undoChanges)
         when "Disconnected" then # will reconnect if needed
+        when "HandshakeResponse"
+          if data.serverVersion < @serverVersionLowerBound || data.serverVersion >= @serverVersionUpperBound
+            errorMsg = "The server version is not compatible with the client version. For this client the server version must be at >= #{@serverVersionLowerBound} and < #{@serverVersionUpperBound}. You should probably update both the client and the server to the latest versions."
+            atom.notifications.addError errorMsg
+            logger.error errorMsg
         else
           atom.notifications.addError 'Internal error: Unrecognized response'
           logger.error('Unrecognized response from server: ' + msg)
@@ -256,3 +265,7 @@ module.exports = ClientManager =
   reload: (added, changed, removed) ->
     if added.length + changed.length + removed.length > 0
       @send { 'tag': 'ReLoad', 'addedModules': added, 'changedModules': changed, 'removedModules': removed }
+
+  shakeHands: () ->
+    pluginVersion = atom.packages.getActivePackage('haskell-tools').metadata.version.split '.'
+    @send { 'tag': 'Handshake', 'clientVersion': pluginVersion.map (n) -> parseInt(n,10) }

@@ -87,7 +87,7 @@ module.exports = HaskellTools =
     pkgManager.dispose()
     clientManager.dispose()
     serverManager.dispose()
-    subscriptions.dispose()
+    @subscriptions.dispose()
 
   resetPlugin: ->
     for name, settings of @config
