@@ -42,12 +42,21 @@ module.exports = TooltipManager =
       hiding = () => $(@lastTooltip).addClass('invisible')
       @tooltipTimer = setTimeout hiding, 1000
 
+    $('atom-workspace').on 'click', '.editor .lines', (event) =>
+      @hideShownTooltip()
+
   hideShownTooltip: () ->
     if @lastTooltip
       $(@lastTooltip).addClass('invisible')
       @lastTooltip = null
       @lastTooltipElem = null
       clearTimeout @tooltipTimer
+
+  refresh: () ->
+    @lastTooltip = null
+    @lastTooltipElem = null
+    $('.ht-tooltip').remove()
+
 
   dispose: () ->
     # Remove attached event listeners

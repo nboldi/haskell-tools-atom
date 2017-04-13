@@ -48,8 +48,10 @@ module.exports = MarkerManager =
   setErrorMarkers: (errorMarkers) ->
     # remove every previous marker
     for [details,text] in errorMarkers
-      if details && @markers[details.file]
-        @removeAllMarkersFromFiles [details.file]
+      if details
+        file = details.file.replace /\\|\//g, path.sep
+        if @markers[file]
+          @removeAllMarkersFromFiles [file]
     for marker in errorMarkers
       @putMarker marker
 

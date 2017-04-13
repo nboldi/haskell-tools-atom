@@ -4,6 +4,7 @@ path = require 'path'
 fs = require 'fs'
 NameDialog = require './name-dialog'
 markerManager = require './marker-manager'
+tooltipManager = require './tooltip-manager'
 logger = require './logger'
 history = require './history-manager'
 statusBar = require './status-bar'
@@ -167,10 +168,12 @@ module.exports = ClientManager =
         when "ErrorMessage" then atom.notifications.addError data.errorMsg
         when "LoadedModules"
           markerManager.removeAllMarkersFromFiles(data.loadedModules.map ([fn,mn]) -> fn)
+          tooltipManager.refresh()
           statusBar.loadedData data.loadedModules
         when "LoadingModules" then statusBar.willLoadData data.modulesToLoad
         when "CompilationProblem"
           markerManager.setErrorMarkers(data.errorMarkers)
+          tooltipManager.refresh()
           statusBar.compilationProblem()
         when "ModulesChanged" then history.registerUndo(data.undoChanges)
         when "Disconnected" then # will reconnect if needed
