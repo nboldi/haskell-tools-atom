@@ -141,7 +141,6 @@ module.exports = ClientManager =
       str = @incomingMsg + msg.toString()
       if str.match /^\s*$/
         return
-      logger.log('ClientManager: Received: ' + str)
       for msgPart in str.split '\n'
         @handleMsg msgPart
 
@@ -162,6 +161,7 @@ module.exports = ClientManager =
   handleMsg: (str) ->
     try
       data = JSON.parse(str)
+      logger.log('ClientManager: Received: ' + str)
       @incomingMsg = ''
       switch data.tag
         when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
