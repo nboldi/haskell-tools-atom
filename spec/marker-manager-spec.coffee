@@ -131,6 +131,7 @@ describe 'Haskell tools marker manager', ->
             atom.commands.dispatch(atom.views.getView(edit), 'tree-view:reveal-active-file')
         runs ->
           expect($('.ht-tree-error').length).toBe 0
+          console.log $('.icon')
           expect($('.icon').length).toBe 2
           markerManager.putMarker [problemLoc, 'Name not in scope: x']
           expect($('.ht-tree-error').length).toBe 2
