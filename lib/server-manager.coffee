@@ -47,9 +47,10 @@ module.exports = ServerManager =
 
     daemonPath = atom.config.get("haskell-tools.daemon-path")
     connectPort = atom.config.get("haskell-tools.connect-port")
+    rtsOptions = atom.config.get("haskell-tools.rts-options")
 
     # set verbose mode and channel log messages to our log here
-    @subproc = process.spawn daemonPath, [connectPort, 'False']
+    @subproc = process.spawn(daemonPath, [connectPort, 'False', '+RTS'].concat rtsOptions)
     @subproc.stdout.on('data', (data) =>
       logger.log('Haskell Tools: ' + data)
     );

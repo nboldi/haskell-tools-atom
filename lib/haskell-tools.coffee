@@ -20,7 +20,7 @@ module.exports = HaskellTools =
       default: false
     'refactored-packages':
       type: 'array'
-      description: 'Contains the list of packages that should be loaded into the engine.'
+      description: 'Contains the list of packages that should be loaded into the engine. Separated by commas.'
       default: []
       items:
         type: 'string'
@@ -36,6 +36,12 @@ module.exports = HaskellTools =
       type: 'boolean'
       description: 'If set to true, the server and the client will log their communication in the clients console.'
       default: 'false'
+    'rts-options':
+      type: 'array'
+      description: 'Run time options for the engine. Separated by commas. For possible options see https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/runtime_control.html'
+      default: []
+      items:
+        type: 'string'
 
   activate: (state) ->
     @subscriptions = new CompositeDisposable
