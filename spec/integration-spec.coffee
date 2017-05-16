@@ -54,9 +54,8 @@ describe 'The haskell-tools plugin', ->
       atom.project.setPaths [rootPath]
       # handshake
       expect(sockWrite).toHaveBeenCalled
-      console.log sockWrite.calls
       expect(sockWrite.calls.some (s) -> s.args[0].indexOf("Handshake") != (-1)).toBe true
-      mockReceive("""{"tag":"HandshakeResponse","serverVersion":[0,6,0,0]}""")
+      mockReceive("""{"tag":"HandshakeResponse","serverVersion":[0,7,0,0]}""")
       # add package to haskell tools
       $('.tree-view .directory').eq(0).addClass('selected')
       atom.commands.dispatch(workspaceElement, 'haskell-tools:toggle-package')
