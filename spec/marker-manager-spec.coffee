@@ -131,7 +131,6 @@ describe 'Haskell tools marker manager', ->
             atom.commands.dispatch(atom.views.getView(edit), 'tree-view:reveal-active-file')
         runs ->
           expect($('.ht-tree-error').length).toBe 0
-          expect($('.icon').length).toBe 2
           markerManager.putMarker [problemLoc, 'Name not in scope: x']
           expect($('.ht-tree-error').length).toBe 2
 
@@ -142,10 +141,8 @@ describe 'Haskell tools marker manager', ->
             atom.commands.dispatch(atom.views.getView(edit), 'tree-view:reveal-active-file')
         runs ->
           atom.commands.dispatch(workspaceElement, 'tree-view:toggle')
-          expect($('.icon').length).toBe 0
           markerManager.putMarker [problemLoc, 'Name not in scope: x']
           atom.commands.dispatch(workspaceElement, 'tree-view:toggle')
-          expect($('.icon').length).toBe 2
           expect($('.ht-tree-error').length).toBe 2
 
     describe "@putMarker()", ->
@@ -156,7 +153,6 @@ describe 'Haskell tools marker manager', ->
           atom.workspace.open(filePath).then (edit) ->
             atom.commands.dispatch(atom.views.getView(edit), 'tree-view:reveal-active-file')
         runs ->
-          expect($('.icon').length).toBe 2
           expect($('.ht-tree-error').length).toBe 2
 
     describe "@removeAllMarkersFromFiles()", ->
