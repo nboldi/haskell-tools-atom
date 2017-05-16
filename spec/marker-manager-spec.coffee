@@ -133,6 +133,7 @@ describe 'Haskell tools marker manager', ->
           expect($('.ht-tree-error').length).toBe 0
           $('.icon').each (i,e) ->
             console.log $(e).html()
+            console.log $(e).attr('data-path')
           expect($('.icon').length).toBe 2
           markerManager.putMarker [problemLoc, 'Name not in scope: x']
           expect($('.ht-tree-error').length).toBe 2
