@@ -25,8 +25,8 @@ module.exports = ClientManager =
   actualRoot: null # The project root of the actual tree command
   lastTreeCommand: null # The name of the last tree command issued
 
-  serverVersionLowerBound: [0,7,0,0] # inclusive minimum of server version
-  serverVersionUpperBound: [0,8,0,0] # exclusive upper limit of server version
+  serverVersionLowerBound: [0,8,0,0] # inclusive minimum of server version
+  serverVersionUpperBound: [0,9,0,0] # exclusive upper limit of server version
 
   activate: () ->
     statusBar.activate()
