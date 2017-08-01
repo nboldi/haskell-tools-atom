@@ -32,6 +32,10 @@ module.exports = HaskellTools =
       type: 'string'
       description: 'The location of the executable. If not set correctly, the plugin tries to find it in a few possible locations.'
       default: '<autodetect>'
+    'watch-path':
+      type: 'string'
+      description: 'The location of the watch executable. It provides file system watching utility for daemon. If not set, the watch will use editor notifications, but it will not recognize changes from other programs.'
+      default: '<watch-off>'
     'debug-mode':
       type: 'boolean'
       description: 'If set to true, the server and the client will log their communication in the clients console.'
@@ -58,7 +62,7 @@ module.exports = HaskellTools =
     serverManager.activate() # must go before pkgHandler, because it activates client manager that pkg handler uses
     clientManager.activate()
     serverManager.onStarted =>
-      clientManager.connect()
+      clientManager.connect(serverManager.watchService)
       logger.log 'enable stop server'
       menuManager.enableCommand('haskell-tools:stop-server')
       menuManager.enableCommand('haskell-tools:restart-server')

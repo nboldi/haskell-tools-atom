@@ -1,5 +1,6 @@
 {CompositeDisposable,Emitter} = require 'atom'
 process = require 'child_process'
+fs = require 'fs'
 logger = require './logger'
 exeLocator = require './exe-locator'
 
@@ -9,6 +10,7 @@ module.exports = ServerManager =
   subproc: null # The subprocess object
   subscriptions: null
   running: false
+  watchService: false
   emitter: new Emitter # generates started and stopped events
 
   activate: () ->
@@ -48,9 +50,19 @@ module.exports = ServerManager =
     daemonPath = atom.config.get("haskell-tools.daemon-path")
     connectPort = atom.config.get("haskell-tools.connect-port")
     rtsOptions = atom.config.get("haskell-tools.rts-options")
+    watchPath = atom.config.get("haskell-tools.watch-path")
 
     # set verbose mode and channel log messages to our log here
-    @subproc = process.spawn(daemonPath, [connectPort, 'False', '+RTS'].concat rtsOptions)
+
+    params = [connectPort, 'False']
+    if fs.existsSync(watchPath)
+      params.push watchPath
+      @watchService = true
+    if rtsOptions.length > 0
+      params.push '+RTS'
+      params = params.concat rtsOptions
+    logger.log('Starting server with parameters: ' + params)
+    @subproc = process.spawn(daemonPath, params)
     @subproc.stdout.on('data', (data) =>
       logger.log('Haskell Tools: ' + data)
     );

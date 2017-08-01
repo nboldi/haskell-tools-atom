@@ -20,6 +20,8 @@ module.exports = ClientManager =
   stopped: true # true, if disconnected from the server by the user
   jobs: [] # tasks to do after the connection has been established
   incomingMsg: '' # the part of the incoming message already received
+  watchService: false # no need to watch the file system if watch service
+                      # is running in the server
 
   renamedFile: null # The file name that is renamed
   actualRoot: null # The project root of the actual tree command
@@ -31,18 +33,20 @@ module.exports = ClientManager =
   activate: () ->
     statusBar.activate()
     history.activate()
-    history.onUndo ([added, changed, removed]) => @reload added, changed, removed
+    if !@watchService
+      history.onUndo ([added, changed, removed]) => @reload added, changed, removed
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:check-server': => @checkServer()
 
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
       @subscriptions.add editor.onDidSave ({path}) =>
-        packages = atom.config.get("haskell-tools.refactored-packages")
-        for pack in packages
-          if path.startsWith pack
-            @whenReady () => @reload [], [path], []
-            return
+        if !@watchService
+          packages = atom.config.get("haskell-tools.refactored-packages")
+          for pack in packages
+            if path.startsWith pack
+              @whenReady () => @reload [], [path], []
+              return
 
     @subscriptions.add atom.commands.onDidDispatch (event) =>
       if event.type == 'tree-view:duplicate'
@@ -61,7 +65,7 @@ module.exports = ClientManager =
           packages = atom.config.get("haskell-tools.refactored-packages")
           # what if the package is inside?
           for pack in packages
-            if removed.startsWith pack
+            if !@watchService && removed.startsWith pack
               if @ready then @reload [], [], [removed]
 
     @subscriptions.add atom.commands.onWillDispatch (event) =>
@@ -74,7 +78,7 @@ module.exports = ClientManager =
             watcher = fs.watch path.dirname(newPath), (eventType, fileName) =>
               if fs.existsSync newPath
                 watcher.close()
-                if @ready
+                if !@watchService && @ready
                   @reload [newPath], [], []
           when 'tree-view:duplicate'
             newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
@@ -82,12 +86,13 @@ module.exports = ClientManager =
             watcher = fs.watch path.dirname(newPath), (eventType, fileName) =>
               if fs.existsSync newPath
                 watcher.close()
-                if @ready
+                if !@watchService && @ready
                   @reload [newPath], [], []
           when 'tree-view:move'
             if @ready && @renamedFile
               newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
-              @reload [newPath], [], [@renamedFile]
+              if !@watchService
+                @reload [newPath], [], [@renamedFile]
 
     # Register refactoring commands
 
@@ -124,9 +129,10 @@ module.exports = ClientManager =
       @connect()
 
   # Connect to the server. Should not be colled while the connection is alive.
-  connect: () ->
+  connect: (watchService) ->
     if @ready
       return # already connected
+    @watchService = watchService
 
     @client = @createConnection()
     @stopped = false
