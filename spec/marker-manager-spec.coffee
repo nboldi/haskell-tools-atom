@@ -12,12 +12,16 @@ c = z
 """
 
 describe 'Haskell tools marker manager', ->
-  [workspaceElement] = []
+  [workspaceElement,treeView] = []
 
   beforeEach ->
     workspaceElement = atom.views.getView(atom.workspace)
     waitsForPromise ->
-      atom.packages.activatePackage('tree-view')
+      atom.packages.activatePackage('tree-view').then (tv) ->
+        if tv.mainModule.createView
+            treeView = tv.mainModule.createView()
+        else
+            treeView = tv.mainModule.getTreeViewInstance()
     waitsForPromise ->
       jasmine.attachToDOM(workspaceElement)
       atom.packages.activatePackage('haskell-tools')
@@ -112,7 +116,7 @@ describe 'Haskell tools marker manager', ->
           expect($('.highlight.ht-comp-problem').length).toBe 0
 
   describe 'In the tree view', ->
-    [filePath,rootPath,problemLoc,editor] = []
+    [filePath,rootPath,problemLoc,editor,shownItems] = []
 
     beforeEach ->
       rootPath = path.resolve(fs.mkdtempSync 'pkg1-')
@@ -127,33 +131,33 @@ describe 'Haskell tools marker manager', ->
     describe "@putMarker()", ->
       it "puts the error marker on opened folders and files", ->
         waitsForPromise ->
-          atom.workspace.open(filePath).then (edit) ->
-            atom.commands.dispatch(atom.views.getView(edit), 'tree-view:reveal-active-file')
+          atom.workspace.open(filePath)
         runs ->
           expect($('.ht-tree-error').length).toBe 0
           markerManager.putMarker [problemLoc, 'Name not in scope: x']
-          expect($('.ht-tree-error').length).toBe 2
+          shownItems = $('.tree-view .icon').length
+          expect($('.ht-tree-error').length).toBe shownItems # should be 2
 
     describe "@putMarker()", ->
       it "puts the error marker on opened folders and files, even if the tree view cannot be seen", ->
         waitsForPromise ->
-          atom.workspace.open(filePath).then (edit) ->
-            atom.commands.dispatch(atom.views.getView(edit), 'tree-view:reveal-active-file')
+          atom.workspace.open(filePath)
         runs ->
           atom.commands.dispatch(workspaceElement, 'tree-view:toggle')
           markerManager.putMarker [problemLoc, 'Name not in scope: x']
           atom.commands.dispatch(workspaceElement, 'tree-view:toggle')
-          expect($('.ht-tree-error').length).toBe 2
+          shownItems = $('.tree-view .icon').length
+          expect($('.ht-tree-error').length).toBe shownItems # should be 2
 
     describe "@putMarker()", ->
       it "puts the error marker on hidden folders and files", ->
         waitsForPromise ->
           expect($('.ht-tree-error').length).toBe 0
           markerManager.putMarker [problemLoc, 'Name not in scope: x']
-          atom.workspace.open(filePath).then (edit) ->
-            atom.commands.dispatch(atom.views.getView(edit), 'tree-view:reveal-active-file')
+          atom.workspace.open(filePath)
         runs ->
-          expect($('.ht-tree-error').length).toBe 2
+          shownItems = $('.tree-view .icon').length
+          expect($('.ht-tree-error').length).toBe shownItems # should be 2
 
     describe "@removeAllMarkersFromFiles()", ->
       it "remove markers from the tree view", ->
@@ -161,7 +165,8 @@ describe 'Haskell tools marker manager', ->
           atom.workspace.open filePath
         runs ->
           markerManager.putMarker [problemLoc, 'Name not in scope: x']
-          expect($('.ht-tree-error').length).toBe 2
+          shownItems = $('.tree-view .icon').length
+          expect($('.ht-tree-error').length).toBe shownItems # should be 2
           markerManager.removeAllMarkersFromFiles [filePath]
           expect($('.ht-tree-error').length).toBe 0
 
@@ -171,10 +176,10 @@ describe 'Haskell tools marker manager', ->
         fs.writeFileSync(filePath2, wrongMod)
         problem2Loc = {file: filePath2, startRow: 2, startCol: 5, endRow: 2, endCol: 6}
         waitsForPromise ->
-          atom.workspace.open filePath
-        waitsForPromise ->
-          atom.workspace.open filePath2
+          atom.workspace.open(filePath).then (edit) ->
+            atom.workspace.open filePath2
         runs ->
+          expect($('.tree-view .icon').length).toBe 3
           markerManager.putMarker [problemLoc, 'Name not in scope: x']
           markerManager.putMarker [problem2Loc, 'Name not in scope: x']
           expect($('.ht-tree-error').length).toBe 3

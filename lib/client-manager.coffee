@@ -73,7 +73,7 @@ module.exports = ClientManager =
       if event.type == 'core:confirm'
         switch @lastTreeCommand
           when 'tree-view:add-file'
-            newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
+            newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor').find('.line:not(.dummy)').text()
             # Wait for the file to be created
             watcher = fs.watch path.dirname(newPath), (eventType, fileName) =>
               if fs.existsSync newPath
@@ -81,7 +81,7 @@ module.exports = ClientManager =
                 if !@watchService && @ready
                   @reload [newPath], [], []
           when 'tree-view:duplicate'
-            newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
+            newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor').find('.line:not(.dummy)').text()
             # Wait for the file to be created
             watcher = fs.watch path.dirname(newPath), (eventType, fileName) =>
               if fs.existsSync newPath
@@ -90,7 +90,7 @@ module.exports = ClientManager =
                   @reload [newPath], [], []
           when 'tree-view:move'
             if @ready && @renamedFile
-              newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor')[0].model.getText()
+              newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor').find('.line:not(.dummy)').text()
               if !@watchService
                 @reload [newPath], [], [@renamedFile]
 
@@ -250,7 +250,7 @@ module.exports = ClientManager =
     if refactoring == 'RenameDefinition' || refactoring == 'ExtractBinding'
       dialog = new NameDialog
       dialog.onSuccess ({answer}) =>
-        @performRefactor(refactoring, file, range, [answer.text()])
+        @performRefactor(refactoring, file, range, [ $(answer).find('.line:not(.dummy)').text()])
       dialog.attach()
     else @performRefactor(refactoring, file, range, [])
 

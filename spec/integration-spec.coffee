@@ -54,7 +54,6 @@ describe 'The haskell-tools plugin', ->
       atom.project.setPaths [rootPath]
       # handshake
       expect(sockWrite).toHaveBeenCalled
-      console.log sockWrite.calls
       expect(sockWrite.calls.some (s) -> s.args[0].indexOf("Handshake") != (-1)).toBe true
       mockReceive("""{"tag":"HandshakeResponse","serverVersion":[0,8,0,0]}""")
       # add package to haskell tools
@@ -72,7 +71,7 @@ describe 'The haskell-tools plugin', ->
       expect($('.header.ht-refactored-header').length).toBe 1
       atom.commands.dispatch(workspaceElement, 'haskell-tools:refactor:rename-definition')
       # fill the name dialog and press enter
-      $('atom-text-editor.mini')[0].model.setText('b')
+      $('atom-text-editor.mini').find('.line:not(.dummy)').text('b')
       # $('.ht-dialog hidden-input').text('b')
       expect($('.ht-dialog').length).toBe 1
       pressEnter $('.ht-dialog')
@@ -96,9 +95,7 @@ describe 'The haskell-tools plugin', ->
       $('.icon[data-path]').each (i,elem) =>
         if $(elem).attr('data-path') == filePath
           atom.commands.dispatch(elem, 'tree-view:move')
-          editorElem = $('.tree-view-dialog atom-text-editor')[0]
-          nameEditor = editorElem.model
-          nameEditor.setText 'B.hs'
+          editorElem = $('.tree-view-dialog atom-text-editor').find('.line:not(.dummy)').text('B.hs')
           atom.commands.dispatch($('.tree-view-dialog atom-text-editor')[0], 'core:confirm')
       escapedNewFilePath = path.join(rootPath,'B.hs').replace /\\/g, '\\\\'
       expect(sockWrite).toHaveBeenCalledWith """{"tag":"ReLoad","addedModules":["#{escapedNewFilePath}"],"changedModules":[],"removedModules":["#{escapedFilePath}"]}"""
