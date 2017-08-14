@@ -257,7 +257,9 @@ module.exports = ClientManager =
 
   performRefactor: (refactoring, file, range, params) ->
     selection = "#{range.start.row + 1}:#{range.start.column + 1}-#{range.end.row + 1}:#{range.end.column + 1}"
-    @send { 'tag': 'PerformRefactoring', 'refactoring': refactoring, 'modulePath': file, 'editorSelection': selection, 'details': params }
+    @send { 'tag': 'PerformRefactoring', 'refactoring': refactoring, 'modulePath': file
+          , 'editorSelection': selection, 'details': params, 'shutdownAfter': false
+          }
     statusBar.performRefactoring()
 
   addPackages: (packages) ->

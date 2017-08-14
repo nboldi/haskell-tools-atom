@@ -54,8 +54,9 @@ module.exports = ServerManager =
 
     # set verbose mode and channel log messages to our log here
 
-    params = [connectPort, 'False']
+    params = ["--port", connectPort]
     if fs.existsSync(watchPath)
+      params.push "--watch-exe"
       params.push watchPath
       @watchService = true
     if rtsOptions.length > 0
