@@ -77,7 +77,7 @@ describe 'The haskell-tools plugin', ->
       pressEnter $('.ht-dialog')
       expect($('.ht-dialog').length).toBe 0
 
-      expect(sockWrite).toHaveBeenCalledWith """{"tag":"PerformRefactoring","refactoring":"RenameDefinition","modulePath":"#{escapedFilePath}","editorSelection":"2:1-2:2","details":["b"]}"""
+      expect(sockWrite).toHaveBeenCalledWith """{"tag":"PerformRefactoring","refactoring":"RenameDefinition","modulePath":"#{escapedFilePath}","editorSelection":"2:1-2:2","details":["b"],"shutdownAfter":false}"""
       expect($('.ht-message').text()).toBe 'Refactoring'
 
       fs.writeFileSync(filePath, refactoredMod)
