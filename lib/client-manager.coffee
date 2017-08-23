@@ -6,7 +6,6 @@ NameDialog = require './name-dialog'
 markerManager = require './marker-manager'
 tooltipManager = require './tooltip-manager'
 logger = require './logger'
-history = require './history-manager'
 statusBar = require './status-bar'
 {$} = require('atom-space-pen-views')
 
@@ -20,81 +19,17 @@ module.exports = ClientManager =
   stopped: true # true, if disconnected from the server by the user
   jobs: [] # tasks to do after the connection has been established
   incomingMsg: '' # the part of the incoming message already received
-  watchService: false # no need to watch the file system if watch service
-                      # is running in the server
 
-  renamedFile: null # The file name that is renamed
-  actualRoot: null # The project root of the actual tree command
-  lastTreeCommand: null # The name of the last tree command issued
-
-  serverVersionLowerBound: [0,8,0,0] # inclusive minimum of server version
-  serverVersionUpperBound: [0,9,0,0] # exclusive upper limit of server version
+  serverVersionLowerBound: [0,9,0,0] # inclusive minimum of server version
+  serverVersionUpperBound: [0,10,0,0] # exclusive upper limit of server version
 
   activate: () ->
     statusBar.activate()
-    history.activate()
-    if !@watchService
-      history.onUndo ([added, changed, removed]) => @reload added, changed, removed
+
+    # Register refactoring commands
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:check-server': => @checkServer()
-
-    @subscriptions.add atom.workspace.observeTextEditors (editor) =>
-      @subscriptions.add editor.onDidSave ({path}) =>
-        if !@watchService
-          packages = atom.config.get("haskell-tools.refactored-packages")
-          for pack in packages
-            if path.startsWith pack
-              @whenReady () => @reload [], [path], []
-              return
-
-    @subscriptions.add atom.commands.onDidDispatch (event) =>
-      if event.type == 'tree-view:duplicate'
-        @lastTreeCommand = 'tree-view:duplicate'
-        @actualRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
-      if event.type == 'tree-view:move'
-        @lastTreeCommand = 'tree-view:move'
-        @renamedFile = event.target.getAttribute('data-path')
-        @actualRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
-      if event.type == 'tree-view:add-file'
-        @lastTreeCommand = 'tree-view:add-file'
-        @actualRoot = $(event.target).closest('.project-root').find('.project-root-header .icon').attr('data-path')
-      if event.type == 'tree-view:remove'
-        removed = event.target.getAttribute('data-path')
-        if removed
-          packages = atom.config.get("haskell-tools.refactored-packages")
-          # what if the package is inside?
-          for pack in packages
-            if !@watchService && removed.startsWith pack
-              if @ready then @reload [], [], [removed]
-
-    @subscriptions.add atom.commands.onWillDispatch (event) =>
-      # need to do before deleting, otherwise it is hard to figure out where it was
-      if event.type == 'core:confirm'
-        switch @lastTreeCommand
-          when 'tree-view:add-file'
-            newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor').find('.line:not(.dummy)').text()
-            # Wait for the file to be created
-            watcher = fs.watch path.dirname(newPath), (eventType, fileName) =>
-              if fs.existsSync newPath
-                watcher.close()
-                if !@watchService && @ready
-                  @reload [newPath], [], []
-          when 'tree-view:duplicate'
-            newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor').find('.line:not(.dummy)').text()
-            # Wait for the file to be created
-            watcher = fs.watch path.dirname(newPath), (eventType, fileName) =>
-              if fs.existsSync newPath
-                watcher.close()
-                if !@watchService && @ready
-                  @reload [newPath], [], []
-          when 'tree-view:move'
-            if @ready && @renamedFile
-              newPath = path.join @actualRoot, $(event.target).closest('atom-text-editor').find('.line:not(.dummy)').text()
-              if !@watchService
-                @reload [newPath], [], [@renamedFile]
-
-    # Register refactoring commands
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:refactor:rename-definition', () => @refactor 'RenameDefinition'
@@ -117,6 +52,12 @@ module.exports = ClientManager =
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:refactor:generate-exports', () => @refactor 'GenerateExports'
 
+    @subscriptions.add atom.commands.add 'atom-workspace',
+      'haskell-tools:refactor:generate-exports', () => @refactor 'GenerateExports'
+
+    @subscriptions.add atom.commands.add 'atom-workspace',
+      'haskell-tools:undo-refactoring': => @undoRefactoring()
+
     autoStart = atom.config.get("haskell-tools.start-automatically")
 
     @emitter.on 'connect', () => @shakeHands()
@@ -129,10 +70,9 @@ module.exports = ClientManager =
       @connect()
 
   # Connect to the server. Should not be colled while the connection is alive.
-  connect: (watchService) ->
+  connect: () ->
     if @ready
       return # already connected
-    @watchService = watchService
 
     @client = @createConnection()
     @stopped = false
@@ -181,10 +121,15 @@ module.exports = ClientManager =
           markerManager.setErrorMarkers(data.errorMarkers)
           tooltipManager.refresh()
           statusBar.compilationProblem()
-        when "ModulesChanged" then history.registerUndo(data.undoChanges)
         when "Disconnected" then # will reconnect if needed
         when "HandshakeResponse"
-          if data.serverVersion < @serverVersionLowerBound || data.serverVersion >= @serverVersionUpperBound
+          wrong = false
+          for i in [0..3]
+            if data.serverVersion[i] < @serverVersionLowerBound[i] || data.serverVersion[i] > @serverVersionUpperBound[i]
+              wrong = true
+          if data.serverVersion == @serverVersionUpperBound
+            wrong = true
+          if wrong
             errorMsg = "The server version is not compatible with the client version. For this client the server version must be at >= #{@serverVersionLowerBound} and < #{@serverVersionUpperBound}. You should probably update both the client and the server to the latest versions."
             atom.notifications.addError errorMsg
             logger.error errorMsg
@@ -219,7 +164,6 @@ module.exports = ClientManager =
   dispose: () ->
     @disconnect()
     @subscriptions.dispose()
-    history.dispose()
     statusBar.dispose()
 
   # Disconnect from the server
@@ -259,6 +203,7 @@ module.exports = ClientManager =
     selection = "#{range.start.row + 1}:#{range.start.column + 1}-#{range.end.row + 1}:#{range.end.column + 1}"
     @send { 'tag': 'PerformRefactoring', 'refactoring': refactoring, 'modulePath': file
           , 'editorSelection': selection, 'details': params, 'shutdownAfter': false
+          , 'diffMode': false
           }
     statusBar.performRefactoring()
 
@@ -280,3 +225,6 @@ module.exports = ClientManager =
   shakeHands: () ->
     pluginVersion = atom.packages.getActivePackage('haskell-tools').metadata.version.split '.'
     @send { 'tag': 'Handshake', 'clientVersion': pluginVersion.map (n) -> parseInt(n,10) }
+
+  undoRefactoring: () ->
+    @send { 'tag': 'UndoLast', 'contents': [] }

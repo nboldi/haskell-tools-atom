@@ -40,6 +40,10 @@ module.exports = HaskellTools =
       type: 'boolean'
       description: 'If set to true, the server and the client will log their communication in the clients console.'
       default: 'false'
+    'use-existing':
+      type: 'boolean'
+      description: 'If set to true, the editor will try to connect to an existing haskell-tools process instead of starting a new one.'
+      default: 'false'
     'rts-options':
       type: 'array'
       description: 'Run time options for the engine. Separated by commas. For possible options see https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/runtime_control.html'
@@ -63,17 +67,20 @@ module.exports = HaskellTools =
     clientManager.activate()
     serverManager.onStarted =>
       clientManager.connect(serverManager.watchService)
-      logger.log 'enable stop server'
       menuManager.enableCommand('haskell-tools:stop-server')
       menuManager.enableCommand('haskell-tools:restart-server')
       menuManager.disableCommand('haskell-tools:start-server')
       menuManager.enableCommand('haskell-tools:refactor:.*')
+      menuManager.enableCommand('haskell-tools:undo-refactoring')
+      menuManager.enableCommand('haskell-tools:check-server')
     serverManager.onStopped =>
       clientManager.disconnect()
       menuManager.disableCommand('haskell-tools:stop-server')
       menuManager.disableCommand('haskell-tools:restart-server')
       menuManager.enableCommand('haskell-tools:start-server')
       menuManager.disableCommand('haskell-tools:refactor:.*')
+      menuManager.disableCommand('haskell-tools:undo-refactoring')
+      menuManager.disableCommand('haskell-tools:check-server')
     pkgManager.activate()
     clientManager.onConnect =>
       pkgManager.reconnect()

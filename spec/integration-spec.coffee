@@ -77,7 +77,7 @@ describe 'The haskell-tools plugin', ->
       pressEnter $('.ht-dialog')
       expect($('.ht-dialog').length).toBe 0
 
-      expect(sockWrite).toHaveBeenCalledWith """{"tag":"PerformRefactoring","refactoring":"RenameDefinition","modulePath":"#{escapedFilePath}","editorSelection":"2:1-2:2","details":["b"],"shutdownAfter":false}"""
+      expect(sockWrite).toHaveBeenCalledWith """{"tag":"PerformRefactoring","refactoring":"RenameDefinition","modulePath":"#{escapedFilePath}","editorSelection":"2:1-2:2","details":["b"],"shutdownAfter":false,"diffMode":false}"""
       expect($('.ht-message').text()).toBe 'Refactoring'
 
       fs.writeFileSync(filePath, refactoredMod)
@@ -87,18 +87,6 @@ describe 'The haskell-tools plugin', ->
       # Send loaded modules message to the client
       mockReceive("""{"tag":"LoadedModules","loadedModules":[["#{escapedFilePath}","A"]]}""")
       expect($('.ht-message').text()).toBe 'Ready'
-
-  it 'should be able to handle move operation', ->
-    $ =>
-      clientManager.connect()
-      mockReceive = mockConnection(sockConn, sockOn)
-      $('.icon[data-path]').each (i,elem) =>
-        if $(elem).attr('data-path') == filePath
-          atom.commands.dispatch(elem, 'tree-view:move')
-          editorElem = $('.tree-view-dialog atom-text-editor').find('.line:not(.dummy)').text('B.hs')
-          atom.commands.dispatch($('.tree-view-dialog atom-text-editor')[0], 'core:confirm')
-      escapedNewFilePath = path.join(rootPath,'B.hs').replace /\\/g, '\\\\'
-      expect(sockWrite).toHaveBeenCalledWith """{"tag":"ReLoad","addedModules":["#{escapedNewFilePath}"],"changedModules":[],"removedModules":["#{escapedFilePath}"]}"""
 
   # remove cannot be tested because of the modal popup, with duplicate there
   # is a problem about watching for the file to exist

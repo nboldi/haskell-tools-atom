@@ -39,6 +39,10 @@ module.exports = ServerManager =
 
   # Starts the executable.
   start: () ->
+    useExisting = atom.config.get("haskell-tools.use-existing")
+    if useExisting
+      @emitter.emit 'started'
+      return
     if !exeLocator.exeSet()
       atom.notifications.addError("The ht-daemon executable does not exist.")
       return
@@ -74,13 +78,20 @@ module.exports = ServerManager =
       # restart the server if it was not intentionally closed
       if @running
         @running = false
-        atom.notifications.addError("Unfortunately the server crashed. Restarting.")
-        @start()
+        atom.notifications.addError("Unfortunately the server crashed. Restarting after 1s.")
+        restart = () =>
+          @start()
+        setTimeout restart, 1000
     );
     @emitter.emit 'started'
 
   # Sends a kill signal to the process
   stop: () ->
+    useExisting = atom.config.get("haskell-tools.use-existing")
+    if useExisting
+      @emitter.emit 'stopped'
+      @running = false
+      return
     if !@running
       atom.notifications.addInfo("Cannot stop because Haskell Tools is not running.")
       return

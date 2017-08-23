@@ -1,4 +1,5 @@
-'atom-text-editor:not([mini])[data-grammar~="haskell"]':
+#'atom-text-editor:not([mini])[data-grammar~="haskell"]':
+'atom-text-editor': # simpler selection allows the shortcuts to be in the menu
   'alt-shift-s': 'haskell-tools:refactor:generate-signature'
   'alt-shift-r': 'haskell-tools:refactor:rename-definition'
   'alt-shift-b': 'haskell-tools:refactor:extract-binding'
