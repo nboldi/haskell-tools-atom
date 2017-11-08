@@ -28,26 +28,14 @@
 
  - [Core refactorings](https://github.com/haskell-tools/haskell-tools/blob/master/documentation/refactorings.md) are available in the plugin.
  - In the tree view context menu, you can select directories that you want to load into the engine. A package that is loaded will be marked with the  ![sync](octicons_sync.png) icon. You can remove a package from the engine in the same context menu. If you don't want to use the tree view, you can set the refactored packages in the settings.
- - A package can be a simple folder with haskell sources inside, or a cabal package with a `.cabal` file. Cabal sandboxes and stack is supported.
- - You can undo refactorings by pressing `Ctrl+Shift+Z` or selecting `Haskell/Undo last refactoring` from the menu. This reverts all changes from the last refactoring (even in files not opened). However, if you manually change the source after the refactoring, it cannot be used.
+ - A package can be a simple folder with haskell sources inside, or a cabal package with a `.cabal` file. Cabal sandboxes and stack projects are supported.
+ - You can undo refactorings by pressing `Alt+Shift+Z` or selecting `Haskell/Undo last refactoring` from the menu. This reverts all changes from the last refactoring (even in files not opened). However, if you manually change the source after the refactoring, it cannot be used.
  - `Haskell/Check Haskell Tools server` can be used to check if the server is running.
+ - The [Haskell-tools refactorings](https://github.com/haskell-tools/haskell-tools/blob/master/documentation/refactorings.md) are available. The default keybindings are:
+   - `Alt+Shift+` `R` for **R**ename definition, `B` for Extract **B**inding, `I` for **I**nline binding, `S` for generate type **S**ignature, `O` for **O**rganize Imports, `E` for Generate **E**xports
+ - The status bar informs you about the modules being loaeded and the current status of the server.
+ - You can access the settings of the plugin below the Haskell menu.
+ 
+For batch trasformations, invoke the [command line interface](https://github.com/haskell-tools/haskell-tools/blob/master/documentation/ht-refact.md) of Haskell-tools.
 
-# Customization
-
-You can create your own keybindings for the refactorings if you want to. The commands that the plugin registers are the following:
-
-   - On the workspace element
-     - `haskell-tools:start-server`
-     - `haskell-tools:stop-server`
-     - `haskell-tools:restart-server`
-     - `haskell-tools:check-server`
-     - `haskell-tools:undo-refactoring`
-     - `haskell-tools:refactor:rename-definition`
-     - `haskell-tools:refactor:generate-signature`
-     - `haskell-tools:refactor:extract-binding`
-     - `haskell-tools:refactor:inline-binding`
-     - `haskell-tools:refactor:float-out`
-     - `haskell-tools:refactor:organize-imports`
-     - `haskell-tools:refactor:generate-exports`
-   - On the directories in tree view:
-     - `haskell-tools:toggle-package`
+See the [limitations](https://github.com/haskell-tools/haskell-tools/blob/master/documentation/limitations.md) on projects and modules.

@@ -4,6 +4,6 @@
 
 This repository contains an Atom plugin that enables the refactoring of Haskell files using the [Haskell-tools](https://github.com/haskell-tools/haskell-tools) framework. You need to install the `haskell-tools-daemon` package via cabal or stack to use the Atom integration.
 
-Check out the [documentation](documentation/user-manual.md) of the plugin here. The documentation of the refactorings can be found in the [Haskell-tools](https://github.com/haskell-tools/haskell-tools/blob/master/documentation/refactorings.md) repository.
+Check out the [user documentation](documentation/user-manual.md) of the plugin.
 
-**Warning: This version only works with the last version of the haskell-tools packages (0.6), but this constraint is not validated. So make sure you have the latest version.**
+For customizing the plugin check the [deveoper documentation](documentation/developer.md) of the plugin.
