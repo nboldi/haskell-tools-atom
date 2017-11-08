@@ -80,7 +80,7 @@ module.exports = HaskellTools =
     menuManager.enableCommand('haskell-tools:reset-plugin')
 
     logger.log 'Haskell-tools plugin is activated'
-    exeLocator.locateExe()
+    exeLocator.locateExes()
     serverManager.activate() # must go before pkgHandler, because it activates client manager that pkg handler uses
     clientManager.activate()
     serverManager.onStarted =>

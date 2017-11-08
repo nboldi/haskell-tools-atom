@@ -6,33 +6,35 @@ logger = require './logger'
 # Module for detecting the server executable. It searches for the executable to
 # initialize the settings. It inspects a few known location depending on OS.
 module.exports = ExeLocator =
-  exeSet: () ->
-    daemonPath = atom.config.get("haskell-tools.daemon-path")
-    return fs.existsSync(daemonPath)
+  locateExes: () ->
+    if not fs.existsSync(atom.config.get "haskell-tools.daemon-path")
+      atom.config.set "haskell-tools.daemon-path", @locateExe "ht-daemon"
+    if not fs.existsSync(atom.config.get "haskell-tools.watch-path")
+      atom.config.set "haskell-tools.watch-path", @locateExe "hfswatch"
 
-  locateExe: () ->
-    if @exeSet() then return
+  locateExe: (exeName) ->
     pathes = []
     switch os.platform()
       when 'win32'
-        userName = process.env['USERPROFILE'].split(path.sep)[2];
-        pathes = [ "C:\\Users\\" + userName + "\\AppData\\Roaming\\cabal\\bin\\ht-daemon.exe"
-                 , "C:\\Users\\" + userName + "\\AppData\\Roaming\\local\\bin\\ht-daemon.exe"
+        userFolder = process.env['USERPROFILE']
+        pathes = [ userFolder + "\\AppData\\Roaming\\cabal\\bin\\" + exeName + ".exe"
+                 , userFolder + "\\AppData\\Roaming\\local\\bin\\" + exeName + ".exe"
                  ]
       when 'linux', 'darwin', 'openbsd', 'freebsd'
-        pathes = [ "~/.local/bin/ht-daemon", "~/.cabal/bin/ht-daemon" ]
+        pathes = [ "~/.local/bin/" + exeName
+                 , "~/.cabal/bin/" + exeName
+                 ]
       else
-        logger.error('Unknown OS: ' + os.platform() + '. Select ht-daemon executable manually.')
-        atom.notifications.addInfo("Cannot determine OS. Select ht-daemon executable manually.")
+        logger.error('Unknown OS: ' + os.platform() + '. Select ' + exeName + ' executable manually.')
+        atom.notifications.addInfo("Cannot determine OS. Select " + exeName + " executable manually.")
 
     found: false
     for path in pathes
       if fs.existsSync(path)
-        found = true
-        atom.config.set("haskell-tools.daemon-path", path)
+        return path
 
-    if !found
-      msg = "Cannot automatically find ht-daemon executable. Select ht-daemon " +
-            "executable manually in the settings. If ht-daemon is not " +
-            "installed user 'cabal install ht-daemon'."
-      atom.notifications.addInfo(msg)
+    msg = "Cannot automatically find " + exeName + " executable. Select " + exeName +
+          " executable manually in the settings. If " + exeName + " is not " +
+          "installed follow the installation instructions."
+    atom.notifications.addInfo(msg)
+    return ""
