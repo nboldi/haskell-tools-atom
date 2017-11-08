@@ -56,6 +56,10 @@
         'command': 'haskell-tools:undo-refactoring'
       }
       {
+        'label': 'Settings'
+        'command': 'haskell-tools:settings'
+      }
+      {
         'label': 'Factory reset'
         'command': 'haskell-tools:reset-plugin'
       }

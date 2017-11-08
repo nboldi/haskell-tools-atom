@@ -31,9 +31,9 @@ describe 'Haskell tools status bar', ->
       $ =>
         statusBar.willLoadData ['A.hs','B.hs','C.hs','B.hs-boot']
         expect($('status-bar .ht-status .ht-message')).toHaveText('Loading (0/3)')
-        statusBar.loadedData [['A.hs','A']]
+        statusBar.loadedData 'A'
         expect($('status-bar .ht-status .ht-message')).toHaveText('Loading (1/3): A')
-        statusBar.loadedData [['B.hs','B']]
+        statusBar.loadedData 'B'
         expect($('status-bar .ht-status .ht-message')).toHaveText('Loading (2/3): B')
-        statusBar.loadedData [['C.hs','C']]
+        statusBar.loadedData 'C'
         expect($('status-bar .ht-status .ht-message')).toHaveText('Ready')

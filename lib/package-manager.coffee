@@ -94,7 +94,6 @@ module.exports = PackageManager =
 
   getChanges: () ->
     packages = atom.config.get('haskell-tools.refactored-packages') ? []
-    logger.log('Registering packages to Haskell Tools: ' + packages)
     newPackages = packages.filter (x) => not (x in @packagesRegistered)
     removedPackages = @packagesRegistered.filter (x) => not (x in packages)
     @packagesRegistered = packages

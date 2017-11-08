@@ -54,6 +54,7 @@ module.exports = ServerManager =
     daemonPath = atom.config.get("haskell-tools.daemon-path")
     connectPort = atom.config.get("haskell-tools.connect-port")
     rtsOptions = atom.config.get("haskell-tools.rts-options")
+    cmdOptions = atom.config.get("haskell-tools.cmd-options")
     watchPath = atom.config.get("haskell-tools.watch-path")
 
     # set verbose mode and channel log messages to our log here
@@ -63,6 +64,7 @@ module.exports = ServerManager =
       params.push "--watch-exe"
       params.push watchPath
       @watchService = true
+    params = params.concat cmdOptions
     if rtsOptions.length > 0
       params.push '+RTS'
       params = params.concat rtsOptions
@@ -70,10 +72,10 @@ module.exports = ServerManager =
     @subproc = process.spawn(daemonPath, params)
     @subproc.stdout.on('data', (data) =>
       logger.log('Haskell Tools: ' + data)
-    );
+    )
     @subproc.stderr.on('data', (data) =>
       logger.error('Haskell Tools: ' + data)
-    );
+    )
     @subproc.on('close', (code) =>
       # restart the server if it was not intentionally closed
       if @running

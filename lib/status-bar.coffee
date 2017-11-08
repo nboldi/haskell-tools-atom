@@ -32,7 +32,10 @@ module.exports = StatusBar =
 
   # When a compilation problem is found, tell the user about it.
   compilationProblem: () ->
-    @setStatus 'Ready'
+    @setStatus 'Compilation problem'
+
+  errorHappened: () ->
+    @setStatus 'Error'
 
   # Show the user how many modules are needed to be loaded.
   willLoadData: (mods) ->
@@ -42,11 +45,10 @@ module.exports = StatusBar =
     else @setStatus "Loading (0/#{@remaining})"
 
   # Inform the user that a given module has been loaded.
-  loadedData: (mods) ->
-    @done += mods.length
-    last = mods[mods.length-1] ? ''
+  loadedData: (name) ->
+    ++@done
     if @done >= @remaining then @setStatus "Ready"
-    else @setStatus "Loading (#{@done}/#{@remaining}): #{last[1]}"
+    else @setStatus "Loading (#{@done}/#{@remaining}): #{name}"
 
   setStatus: (text) ->
     if @message

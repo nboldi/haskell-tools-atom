@@ -65,7 +65,7 @@ describe 'The haskell-tools plugin', ->
       mockReceive("""{"tag":"LoadingModules","modulesToLoad":["#{escapedFilePath}"]}""")
       expect($('.ht-message').text()).toBe 'Loading (0/1)'
       # Send loaded modules message to the client
-      mockReceive("""{"tag":"LoadedModules","loadedModules":[["#{escapedFilePath}","A"]]}""")
+      mockReceive("""{"tag":"LoadedModule","loadedModulePath":"#{escapedFilePath}","loadedModuleName":"A"}""")
       expect($('.ht-message').text()).toBe 'Ready'
 
       expect($('.header.ht-refactored-header').length).toBe 1
@@ -85,7 +85,7 @@ describe 'The haskell-tools plugin', ->
       mockReceive("""{"tag":"LoadingModules","modulesToLoad":["#{escapedFilePath}"]}""")
       expect($('.ht-message').text()).toBe 'Loading (0/1)'
       # Send loaded modules message to the client
-      mockReceive("""{"tag":"LoadedModules","loadedModules":[["#{escapedFilePath}","A"]]}""")
+      mockReceive("""{"tag":"LoadedModule","loadedModulePath":"#{escapedFilePath}","loadedModuleName":"A"}""")
       expect($('.ht-message').text()).toBe 'Ready'
 
   # remove cannot be tested because of the modal popup, with duplicate there

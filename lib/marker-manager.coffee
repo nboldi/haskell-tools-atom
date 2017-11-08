@@ -58,7 +58,7 @@ module.exports = MarkerManager =
   # Registers the given error marker, shows if possible
   putMarker: ([details,text]) ->
     if !details
-      atom.notifications.addError ("error: #{text}")
+      atom.notifications.addError("error: #{text}", {dismissable : true})
       return
     file = details.file.replace /\\|\//g, path.sep
     editorsFor = @editors[file]

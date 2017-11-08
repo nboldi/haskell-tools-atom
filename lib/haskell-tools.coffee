@@ -15,38 +15,53 @@ module.exports = HaskellTools =
   subscriptions: null
   config:
     'start-automatically':
+      order: 1
       type: 'boolean'
       description: 'If set the engine will be started when the editor starts.'
       default: false
     'refactored-packages':
+      order: 2
       type: 'array'
       description: 'Contains the list of packages that should be loaded into the engine. Separated by commas.'
       default: []
       items:
         type: 'string'
     'connect-port':
+      order: 3
       type: 'integer'
       description: 'The number of the port that the engine and the client uses for communication.'
       default: 4123
     'daemon-path':
+      order: 4
       type: 'string'
       description: 'The location of the executable. If not set correctly, the plugin tries to find it in a few possible locations.'
       default: '<autodetect>'
     'watch-path':
+      order: 5
       type: 'string'
       description: 'The location of the watch executable. It provides file system watching utility for daemon. If not set, the watch will use editor notifications, but it will not recognize changes from other programs.'
       default: '<watch-off>'
+    'rts-options':
+      order: 6
+      type: 'array'
+      description: 'Run time options for the engine. Separated by commas. For possible options see https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/runtime_control.html'
+      default: []
+      items:
+        type: 'string'
     'debug-mode':
+      order: 7
       type: 'boolean'
       description: 'If set to true, the server and the client will log their communication in the clients console.'
       default: 'false'
     'use-existing':
+      order: 8
       type: 'boolean'
       description: 'If set to true, the editor will try to connect to an existing haskell-tools process instead of starting a new one.'
       default: 'false'
-    'rts-options':
+    'cmd-options':
+      order: 9
       type: 'array'
-      description: 'Run time options for the engine. Separated by commas. For possible options see https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/runtime_control.html'
+      description: 'Command-line options used for haskell-tools daemon. For possible options, check `ht-daemon --help`'
       default: []
       items:
         type: 'string'
@@ -56,9 +71,12 @@ module.exports = HaskellTools =
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:reset-plugin': => @resetPlugin()
+    @subscriptions.add atom.commands.add 'atom-workspace',
+      'haskell-tools:settings': => atom.workspace.open("atom://config/packages/haskell-tools")
 
     # disable commands in case the activation is not successful
     menuManager.disableCommand('haskell-tools:.*')
+    menuManager.enableCommand('haskell-tools:settings')
     menuManager.enableCommand('haskell-tools:reset-plugin')
 
     logger.log 'Haskell-tools plugin is activated'

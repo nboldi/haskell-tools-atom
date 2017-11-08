@@ -107,21 +107,25 @@ module.exports = ClientManager =
   handleMsg: (str) ->
     try
       data = JSON.parse(str)
-      logger.log('ClientManager: Received: ' + str)
+      if atom.config.get("haskell-tools.debug-mode")
+        logger.log('ClientManager: Received: ' + str)
       @incomingMsg = ''
       switch data.tag
         when "KeepAliveResponse" then atom.notifications.addInfo 'Server is up and running'
-        when "ErrorMessage" then atom.notifications.addError data.errorMsg
-        when "LoadedModules"
-          markerManager.removeAllMarkersFromFiles(data.loadedModules.map ([fn,mn]) -> fn)
+        when "ErrorMessage"
+          atom.notifications.addError data.errorMsg, {dismissable : true}
+          statusBar.errorHappened()
+        when "LoadedModule"
+          markerManager.removeAllMarkersFromFiles(data.loadedModulePath)
           tooltipManager.refresh()
-          statusBar.loadedData data.loadedModules
+          statusBar.loadedData data.loadedModuleName
         when "LoadingModules" then statusBar.willLoadData data.modulesToLoad
         when "CompilationProblem"
           markerManager.setErrorMarkers(data.errorMarkers)
           tooltipManager.refresh()
           statusBar.compilationProblem()
         when "Disconnected" then # will reconnect if needed
+        when "UnusedFlags" then atom.notifications.addWarning "Error: The following ghc-flags are not recognized: " + data.unusedFlags, {dismissable: true}
         when "HandshakeResponse"
           wrong = false
           for i in [0..3]
@@ -131,10 +135,10 @@ module.exports = ClientManager =
             wrong = true
           if wrong
             errorMsg = "The server version is not compatible with the client version. For this client the server version must be at >= #{@serverVersionLowerBound} and < #{@serverVersionUpperBound}. You should probably update both the client and the server to the latest versions."
-            atom.notifications.addError errorMsg
+            atom.notifications.addError errorMsg, {dismissable : true}
             logger.error errorMsg
         else
-          atom.notifications.addError 'Internal error: Unrecognized response'
+          atom.notifications.addError 'Internal error: Unrecognized response', {dismissable : true}
           logger.error('Unrecognized response from server: ' + msg)
     catch error
       # probably not the whole message is received
@@ -174,8 +178,11 @@ module.exports = ClientManager =
 
   # Send a command to the server via JSON
   send: (data) ->
+    sentData = JSON.stringify(data)
+    if atom.config.get("haskell-tools.debug-mode")
+      logger.log('ClientManager: Sending: ' + sentData)
     if @ready
-      @client.write JSON.stringify(data)
+      @client.write sentData
       @client.write '\n'
     else atom.notifications.addError("Haskell-tools: Server is not ready. Start the server first.")
 
