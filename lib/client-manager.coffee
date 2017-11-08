@@ -116,7 +116,7 @@ module.exports = ClientManager =
           atom.notifications.addError data.errorMsg, {dismissable : true}
           statusBar.errorHappened()
         when "LoadedModule"
-          markerManager.removeAllMarkersFromFiles(data.loadedModulePath)
+          markerManager.removeAllMarkersFromFiles [data.loadedModulePath]
           tooltipManager.refresh()
           statusBar.loadedData data.loadedModuleName
         when "LoadingModules" then statusBar.willLoadData data.modulesToLoad

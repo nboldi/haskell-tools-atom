@@ -43,9 +43,6 @@ module.exports = ServerManager =
     if useExisting
       @emitter.emit 'started'
       return
-    if !exeLocator.exeSet()
-      atom.notifications.addError("The ht-daemon executable does not exist.")
-      return
     if @running
       atom.notifications.addInfo("Cannot start because Haskell Tools is already running.")
       return

@@ -27,7 +27,7 @@ module.exports = TooltipManager =
         # Creating a new tooltip for the marker
         marker = markerManager.getMarkerFromElem elem
         # Tooltips are saved to the DOM
-        elem.append("<div class='ht-tooltip'>#{marker.text}</div>")
+        elem.append $("<div class='ht-tooltip'></div>").text(marker.text)
         tooltip = elem.children('.ht-tooltip')
         if marker.text
           # Calculate a good width for the new tooltip
