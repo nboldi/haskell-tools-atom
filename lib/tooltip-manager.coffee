@@ -9,11 +9,43 @@ module.exports = TooltipManager =
   lastTooltipElem: null # The elem corresponding to the last tooltip
 
   activate: () ->
-    # Showing tooltips when hovering over the markers
-    # Note: I wanted to show these on the marked source code fragment but the
-    # highlight is below the text, and placing it above cause visual problems.
-    # This could be solved by a mouseover on the whole editor and checking if
-    # the mouse is actually over a problem, but this seems to overdo the job.
+
+    # Show tooltips on the highlighted elements.
+    # Since marker decorations already implemented in Atom are not capable of listening to mouse
+    # events, we create a special element above each marker and use it to catch mouseover and display
+    # the tooltip.
+    markerManager.onMarked ({editor, marker, rng, text}) =>
+      editorElement = atom.views.getView(editor)
+      # Because view synchronization issues, we must delay the insertion of markers until the file
+      # is actually displayed
+      $(editorElement).one 'mouseover', () =>
+        if !marker.isValid() || marker.isDestroyed()
+          return # the marker is invalidated without ever being shown
+        screenPos = editor.screenRangeForBufferRange rng
+        position = editorElement.pixelRectForScreenRange screenPos
+        keeper = $("<div></div>").addClass('ht-comp-problem').css({
+                    position: "absolute",
+                    top: position.top, left: position.left,
+                    width: position.width, height: position.height
+                  }).data('msg-text', text)
+        # create an overlays div inside the editor page
+        if !$(editorElement).find('.scroll-view .overlays').length
+          $(editorElement).find('.scroll-view > :first-child').append($('<div class="overlays"></div>'))
+        $(editorElement).find('.scroll-view .overlays').append keeper
+        # when the marker is changed (moved, resized), also change the overlay
+        marker.onDidChange (event) =>
+          rng = [ [event.newTailBufferPosition.row, event.newTailBufferPosition.column]
+                , [event.newHeadBufferPosition.row, event.newHeadBufferPosition.column] ]
+          position = editorElement.pixelRectForScreenRange(editor.screenRangeForBufferRange rng)
+          keeper.css({
+            top: position.top, left: position.left,
+            width: position.width, height: position.height
+          })
+          keeper.toggle(event.isValid)
+        # remove the overlay if the marker is destroyed
+        marker.onDidDestroy () => keeper.remove()
+
+    # Showing tooltips when hovering over the markers (both in the gutter and in the text)
     $('atom-workspace').on 'mouseenter', '.editor .ht-comp-problem', (event) =>
       elem = $(event.target)
       if not elem.hasClass('ht-comp-problem')
@@ -25,13 +57,13 @@ module.exports = TooltipManager =
         tooltip.removeClass('invisible')
       else
         # Creating a new tooltip for the marker
-        marker = markerManager.getMarkerFromElem elem
+        text = $(elem).data('msg-text') || markerManager.getMarkerFromElem(elem).text
         # Tooltips are saved to the DOM
-        elem.append $("<div class='ht-tooltip'></div>").text(marker.text)
+        elem.append $("<div class='ht-tooltip'></div>").text(text)
         tooltip = elem.children('.ht-tooltip')
-        if marker.text
+        if text
           # Calculate a good width for the new tooltip
-          tooltip.css('min-width', 200 + Math.min(200, marker.text.length * 2))
+          tooltip.css('min-width', 200 + Math.min(200, text.length * 2))
       @lastTooltip = tooltip
       @lastTooltipElem = elem
 

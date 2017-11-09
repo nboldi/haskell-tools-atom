@@ -1,4 +1,4 @@
-{CompositeDisposable} = require 'atom'
+{CompositeDisposable, Emitter} = require 'atom'
 path = require 'path'
 {$} = require('atom-space-pen-views')
 
@@ -11,8 +11,10 @@ module.exports = MarkerManager =
               # identify markers using their index in the list of all markers.
   treeListener: null
 
+  subscriptions: new CompositeDisposable
+  emitter: new Emitter
+
   activate: () ->
-    @subscriptions = new CompositeDisposable
     @subscriptions.add atom.workspace.observeTextEditors (editor) =>
       if editor.buffer.file
         if @editors[editor.buffer.file.path]
@@ -87,11 +89,15 @@ module.exports = MarkerManager =
     {startRow,startCol,endRow,endCol} = details
     rng = [[startRow - 1, startCol - 1], [endRow - 1, endCol - 1]]
     marker = editor.markBufferRange rng
+    @emitter.emit 'marked', {editor: editor, marker: marker, rng: rng, text: text}
     editor.decorateMarker(marker, type: 'highlight', class: 'ht-comp-problem')
     gutter = editor.gutterWithName 'ht-problems'
     gutter.show()
-    decorator = gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
+    gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
     marker
+
+  onMarked: (callback) ->
+    @emitter.on 'marked', callback
 
   # Remove all markers in the entire workspace
   removeAllMarkers: () ->
@@ -133,6 +139,7 @@ module.exports = MarkerManager =
         shownMarker.destroy()
     @markers[file] = []
 
+  # Observe the tree view as it changes. We need to put the markers on them.
   setupListeners: () ->
     if @treeListener
       @treeListener.disconnect()
