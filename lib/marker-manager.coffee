@@ -154,5 +154,5 @@ module.exports = MarkerManager =
       if markers.length > 0 then markedFiles.push file
     $('.tree-view .icon[data-path]:not(.ht-tree-error)').each (i,elem) =>
       for file in markedFiles
-        if file.startsWith $(elem).attr('data-path')
+        if file.startsWith($(elem).attr('data-path') + path.sep) || file == $(elem).attr('data-path')
           $(elem).addClass 'ht-tree-error'
