@@ -195,6 +195,19 @@ module.exports = ClientManager =
     editor = atom.workspace.getActivePaneItem()
     if not editor
       return
+    if editor.isModified()
+      if atom.config.get("haskell-tools.save-before-refactor")
+        editor.save()
+        disp = editor.onDidSave () =>
+                 disp.dispose()
+                 tryAgain = () =>
+                   @refactor(refactoring) # Try again after saving
+                 setTimeout tryAgain, 1000 # wait for the file system to inform Haskell-tools
+                                           # about the change.
+        return
+      else
+        atom.notifications.addError("Can't refactor unsaved files. Turn-on auto-saving to enable it.")
+        return
     file = editor.buffer.file.path
     range = editor.getSelectedBufferRange()
 

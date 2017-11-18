@@ -41,6 +41,11 @@ module.exports = HaskellTools =
       type: 'string'
       description: 'The location of the watch executable. It provides file system watching utility for daemon. If not set, the watch will use editor notifications, but it will not recognize changes from other programs.'
       default: '<watch-off>'
+    'save-before-refactor':
+      order: 5.5
+      type: 'boolean'
+      description: 'If set the editor will automatically save the editor contents before refactoring.'
+      default: true
     'rts-options':
       order: 6
       type: 'array'
