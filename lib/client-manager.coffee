@@ -247,4 +247,7 @@ module.exports = ClientManager =
     @send { 'tag': 'Handshake', 'clientVersion': pluginVersion.map (n) -> parseInt(n,10) }
 
   undoRefactoring: () ->
-    @send { 'tag': 'UndoLast', 'contents': [] }
+    editors = atom.workspace.getTextEditors()
+    allSaved = editors.every (e) -> !e.isModified()
+    if allSaved then @send { 'tag': 'UndoLast', 'contents': [] }
+    else atom.notifications.addError("Can't undo refactoring while there are unsaved files. Save or reload them from the disk.")
