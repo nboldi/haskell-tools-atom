@@ -3,6 +3,10 @@
     'label': 'Haskell'
     'submenu': [
       {
+        'label': 'Start Haskell Tools server'
+        'command': 'haskell-tools:start-server'
+      }
+      {
         'label': 'Refactor'
         'submenu': [
           {
@@ -30,15 +34,26 @@
             'command': 'haskell-tools:refactor:organize-imports'
           }
           {
+            'label': 'Organize Extensions'
+            'command': 'haskell-tools:refactor:organize-extensions'
+          }
+          {
             'label': 'Generate Exports'
             'command': 'haskell-tools:refactor:generate-exports'
           }
         ]
       }
-      {
-        'label': 'Start Haskell Tools server'
-        'command': 'haskell-tools:start-server'
-      }
+      'label': 'Refactor project'
+      'submenu': [
+        {
+          'label': 'Organize imports'
+          'command': 'haskell-tools:refactor:project-organize-imports'
+        }
+        {
+          'label': 'Organize extensions'
+          'command': 'haskell-tools:refactor:project-organize-extensions'
+        }
+      ]
       {
         'label': 'Stop Haskell Tools server'
         'command': 'haskell-tools:stop-server'

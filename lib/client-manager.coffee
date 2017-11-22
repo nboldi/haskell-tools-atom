@@ -20,8 +20,8 @@ module.exports = ClientManager =
   jobs: [] # tasks to do after the connection has been established
   incomingMsg: '' # the part of the incoming message already received
 
-  serverVersionLowerBound: [0,9,0,0] # inclusive minimum of server version
-  serverVersionUpperBound: [0,10,0,0] # exclusive upper limit of server version
+  serverVersionLowerBound: [1,0,0,0] # inclusive minimum of server version
+  serverVersionUpperBound: [1,1,0,0] # exclusive upper limit of server version
 
   activate: () ->
     statusBar.activate()
@@ -53,7 +53,13 @@ module.exports = ClientManager =
       'haskell-tools:refactor:generate-exports', () => @refactor 'GenerateExports'
 
     @subscriptions.add atom.commands.add 'atom-workspace',
-      'haskell-tools:refactor:generate-exports', () => @refactor 'GenerateExports'
+      'haskell-tools:refactor:project-organize-imports', () => @refactor 'ProjectOrganizeImports'
+
+    @subscriptions.add atom.commands.add 'atom-workspace',
+      'haskell-tools:refactor:organize-extensions', () => @refactor 'OrganizeExtensions'
+
+    @subscriptions.add atom.commands.add 'atom-workspace',
+      'haskell-tools:refactor:project-organize-extensions', () => @refactor 'ProjectOrganizeExtensions'
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:undo-refactoring': => @undoRefactoring()
