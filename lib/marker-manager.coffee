@@ -49,51 +49,52 @@ module.exports = MarkerManager =
   # Register the given error markers and remove already existing
   setErrorMarkers: (errorMarkers) ->
     # remove every previous marker
-    for [details,text] in errorMarkers
-      if details
-        file = details.file.replace /\\|\//g, path.sep
+    for marker in errorMarkers
+      if marker.location
+        file = marker.location.file.replace /\\|\//g, path.sep
         if @markers[file]
           @removeAllMarkersFromFiles [file]
     for marker in errorMarkers
       @putMarker marker
+    @refreshFileMarkers()
 
   # Registers the given error marker, shows if possible
-  putMarker: ([details,text]) ->
-    if !details
+  putMarker: ({location, message, severity}) ->
+    if !location
       atom.notifications.addError("error: #{text}", {dismissable : true})
       return
-    file = details.file.replace /\\|\//g, path.sep
+    file = location.file.replace /\\|\//g, path.sep
     editorsFor = @editors[file]
     $('.tree-view .icon[data-path]').each (i,elem) =>
       if file.startsWith($(elem).attr('data-path') + path.sep) || file == $(elem).attr('data-path')
-        $(elem).addClass 'ht-tree-error'
+        $(elem).addClass('ht-tree-error ht-' + severity)
     if not @markers[file]
       @markers[file] = []
     if editorsFor
       markers = []
       for editor in editorsFor
-        markers.push @putMarkerOn(editor, details, text)
-      @markers[file].push { details: details, text: text, markers: markers }
+        markers.push @putMarkerOn(editor, location, severity, message)
+      @markers[file].push { location: location, severity: severity, text: message, markers: markers }
     else
       # editor is not open
-      @markers[file].push { details: details, text: text, markers: [] }
+      @markers[file].push { location: location, severity: severity, text: message, markers: [] }
 
   # Show registered error markers on the given editor.
   putMarkersOn: (editor) ->
     allMarkers = @markers[editor.buffer.file.path] ? []
     for marker in allMarkers
-      marker.markers.push @putMarkerOn(editor, marker.details, marker.text)
+      marker.markers.push @putMarkerOn(editor, marker.location, marker.severity, marker.text)
 
   # Shows the given error marker on a given editor
-  putMarkerOn: (editor, details, text) ->
-    {startRow,startCol,endRow,endCol} = details
+  putMarkerOn: (editor, location, severity, message) ->
+    {startRow,startCol,endRow,endCol} = location
     rng = [[startRow - 1, startCol - 1], [endRow - 1, endCol - 1]]
     marker = editor.markBufferRange rng
-    @emitter.emit 'marked', {editor: editor, marker: marker, rng: rng, text: text}
-    editor.decorateMarker(marker, type: 'highlight', class: 'ht-comp-problem')
+    @emitter.emit 'marked', {editor: editor, marker: marker, rng: rng, text: message}
+    editor.decorateMarker(marker, type: 'highlight', class: 'ht-comp-problem ht-' + severity)
     gutter = editor.gutterWithName 'ht-problems'
     gutter.show()
-    gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem')
+    gutter.decorateMarker(marker, type: 'gutter', class: 'ht-comp-problem ht-' + severity)
     marker
 
   onMarked: (callback) ->
@@ -151,8 +152,12 @@ module.exports = MarkerManager =
   refreshFileMarkers: () ->
     markedFiles = []
     for file, markers of @markers
-      if markers.length > 0 then markedFiles.push file
-    $('.tree-view .icon[data-path]:not(.ht-tree-error)').each (i,elem) =>
-      for file in markedFiles
+      err = markers.some (m) -> m.severity == "Error"
+      warn = markers.some (m) -> m.severity == "Warning"
+      if markers.length > 0 
+        markedFiles.push [file, if err then "Error" else if warn then "Warning" else "Info"]
+    $('.tree-view .icon[data-path]').each (i,elem) =>
+      for [file, severity] in markedFiles
         if file.startsWith($(elem).attr('data-path') + path.sep) || file == $(elem).attr('data-path')
-          $(elem).addClass 'ht-tree-error'
+          $(elem).removeClass('ht-Error ht-Warning ht-Info')
+          $(elem).addClass ('ht-tree-error ht-' + severity)

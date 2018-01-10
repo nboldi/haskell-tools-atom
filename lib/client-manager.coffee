@@ -127,19 +127,22 @@ module.exports = ClientManager =
           statusBar.loadedData data.loadedModuleName
         when "LoadingModules" then statusBar.willLoadData data.modulesToLoad
         when "CompilationProblem"
-          markerManager.setErrorMarkers(data.errorMarkers)
+          markerManager.setErrorMarkers(data.markers)
           tooltipManager.refresh()
-          statusBar.compilationProblem()
+          isError = data.markers.some (e) -> e.severity == "Error"
+          if isError
+            statusBar.compilationProblem()
         when "Disconnected" then # will reconnect if needed
         when "UnusedFlags" then atom.notifications.addWarning "Error: The following ghc-flags are not recognized: " + data.unusedFlags, {dismissable: true}
         when "HandshakeResponse"
           wrong = false
-          for i in [0..3]
-            if data.serverVersion[i] < @serverVersionLowerBound[i] || data.serverVersion[i] > @serverVersionUpperBound[i]
-              wrong = true
-          if data.serverVersion == @serverVersionUpperBound
-            wrong = true
-          if wrong
+          arrayLTE = (arr1, arr2) ->
+            for i in [0..Math.min(arr1.length,arr2.length)]
+              if arr1[i] < arr2[i] then return true
+              if arr1[i] > arr2[i] then return false
+            return true
+          console.log data.serverVersion, @serverVersionLowerBound, @serverVersionUpperBound
+          if !arrayLTE(@serverVersionLowerBound, data.serverVersion) && !arrayLTE(data.serverVersion, @serverVersionUpperBound)
             errorMsg = "The server version is not compatible with the client version. For this client the server version must be at >= #{@serverVersionLowerBound} and < #{@serverVersionUpperBound}. You should probably update both the client and the server to the latest versions."
             atom.notifications.addError errorMsg, {dismissable : true}
             logger.error errorMsg

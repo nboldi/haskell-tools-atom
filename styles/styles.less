@@ -22,7 +22,18 @@
   visibility: visible;
   font-family: "Octicons Regular";
   content: @alert;
-  color: @text-color-error;
+}
+
+.editor .gutter .decoration.ht-comp-problem.ht-Error:before {
+  color: @background-color-error;
+}
+
+.editor .gutter .decoration.ht-comp-problem.ht-Warning:before {
+  color: @background-color-warning;
+}
+
+.editor .gutter .decoration.ht-comp-problem.ht-Info:before {
+  color: @background-color-info;
 }
 
 // highlighting the location of errors
@@ -30,14 +41,36 @@
   visibility: visible;
   border-bottom-style: dotted;
   border-bottom-width: 1px;
-  border-bottom-color: @text-color-error;
+}
+
+.editor .highlights .highlight.ht-comp-problem.ht-Error .region {
+  border-bottom-color: @background-color-error;
+}
+
+.editor .highlights .highlight.ht-comp-problem.ht-Warning .region {
+  border-bottom-color: @background-color-warning;
+}
+
+.editor .highlights .highlight.ht-comp-problem.ht-Info .region {
+  border-bottom-color: @background-color-info;
 }
 
 // highlight locations of errors in tree view
 .tree-view .ht-tree-error:before {
   font-family: "Octicons Regular";
-  color: @text-color-error;
   content: @alert;
+}
+
+.tree-view .ht-tree-error.ht-Error:before {
+  color: @background-color-error;
+}
+  
+.tree-view .ht-tree-error.ht-Warning:before {
+  color: @background-color-warning;
+}
+    
+.tree-view .ht-tree-error:before {
+  color: @background-color-info;
 }
 
 // displayed tooltips
