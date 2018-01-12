@@ -45,25 +45,23 @@ describe 'Haskell tools marker manager', ->
     describe "@putMarker()", ->
       it "puts an error marker to the already opened file", ->
         $ => # Haskell tools depends on a completely loaded dom
-          markerManager.putMarker [problem1Loc, 'Name not in scope: x']
+          markerManager.putMarker {location: problem1Loc, message: 'Name not in scope: x', severity: 'Error'}
+          console.log "@putMarker()", $('.decoration.ht-comp-problem').length, $('.overlays .ht-comp-problem').length
           expect($('.decoration.ht-comp-problem').length).toBe 1
-          expect($('.highlight.ht-comp-problem').length).toBe 1
 
     describe "@setErrorMarkers()", ->
       it "removes all existing markers and puts on the new ones", ->
         $ => # Haskell tools depends on a completely loaded dom
-          markerManager.putMarker [problem1Loc, 'Name not in scope: x']
-          markerManager.setErrorMarkers [[problem2Loc, 'Name not in scope: y']]
+          markerManager.putMarker {location: problem1Loc, message: 'Name not in scope: x', severity: 'Error'}
+          markerManager.setErrorMarkers [{location: problem2Loc, message: 'Name not in scope: s', severity: 'Error'}]
           expect($('.decoration.ht-comp-problem').length).toBe 1
-          expect($('.highlight.ht-comp-problem').length).toBe 1
 
     describe "@removeAllMarkersFromFiles()", ->
       it "removes all existing markers from the given file", ->
         $ => # Haskell tools depends on a completely loaded dom
-          markerManager.putMarker [problem1Loc, 'Name not in scope: x']
+          markerManager.putMarker {location: problem1Loc, message: 'Name not in scope: x', severity: 'Error'}
           markerManager.removeAllMarkersFromFiles [filePath]
           expect($('.decoration.ht-comp-problem').length).toBe 0
-          expect($('.highlight.ht-comp-problem').length).toBe 0
 
   describe 'With no open editor', ->
     [filePath,problemLoc] = []
@@ -77,14 +75,13 @@ describe 'Haskell tools marker manager', ->
     describe "@putMarker()", ->
       it "puts an error marker that can be seen when the file is opened", ->
         $ => # Haskell tools depends on a completely loaded dom
-          markerManager.putMarker [problemLoc, 'Name not in scope: x']
+          markerManager.putMarker {location: problemLoc, message: 'Name not in scope: x', severity: 'Error'}
           expect($('.ht-comp-problem').length).toBe 0
 
           waitsForPromise ->
             atom.workspace.open(filePath)
           runs ->
             expect($('.decoration.ht-comp-problem').length).toBe 1
-            expect($('.highlight.ht-comp-problem').length).toBe 1
 
   describe 'With a splitted editor', ->
     [editor,problemLoc,filePath] = []
@@ -103,17 +100,15 @@ describe 'Haskell tools marker manager', ->
         $ => # Haskell tools depends on a completely loaded dom
           atom.commands.dispatch(atom.views.getView(atom.workspace.getActivePane()), 'pane:split-right-and-copy-active-item')
           expect($('.editor').length).toBe 2
-          markerManager.putMarker [problemLoc, 'Name not in scope: x']
+          markerManager.putMarker {location: problemLoc, message: 'Name not in scope: x', severity: 'Error'}
           expect($('.decoration.ht-comp-problem').length).toBe 2
-          expect($('.highlight.ht-comp-problem').length).toBe 2
 
     describe "@removeAllMarkersFromFiles()", ->
       it "removes all existing markers from all panes", ->
         $ => # Haskell tools depends on a completely loaded dom
-          markerManager.putMarker [problemLoc, 'Name not in scope: x']
+          markerManager.putMarker {location: problemLoc, message: 'Name not in scope: x', severity: 'Error'}
           markerManager.removeAllMarkersFromFiles [filePath]
           expect($('.decoration.ht-comp-problem').length).toBe 0
-          expect($('.highlight.ht-comp-problem').length).toBe 0
 
   describe 'In the tree view', ->
     [filePath,rootPath,problemLoc,editor,shownItems] = []
@@ -134,7 +129,7 @@ describe 'Haskell tools marker manager', ->
           atom.workspace.open(filePath)
         runs ->
           expect($('.ht-tree-error').length).toBe 0
-          markerManager.putMarker [problemLoc, 'Name not in scope: x']
+          markerManager.putMarker {location: problemLoc, message: 'Name not in scope: x', severity: 'Error'}
           shownItems = $('.tree-view .icon').length
           expect($('.ht-tree-error').length).toBe shownItems # should be 2
 
@@ -144,7 +139,7 @@ describe 'Haskell tools marker manager', ->
           atom.workspace.open(filePath)
         runs ->
           atom.commands.dispatch(workspaceElement, 'tree-view:toggle')
-          markerManager.putMarker [problemLoc, 'Name not in scope: x']
+          markerManager.putMarker {location: problemLoc, message: 'Name not in scope: x', severity: 'Error'}
           atom.commands.dispatch(workspaceElement, 'tree-view:toggle')
           shownItems = $('.tree-view .icon').length
           expect($('.ht-tree-error').length).toBe shownItems # should be 2
@@ -153,7 +148,7 @@ describe 'Haskell tools marker manager', ->
       it "puts the error marker on hidden folders and files", ->
         waitsForPromise ->
           expect($('.ht-tree-error').length).toBe 0
-          markerManager.putMarker [problemLoc, 'Name not in scope: x']
+          markerManager.putMarker {location: problemLoc, message: 'Name not in scope: x', severity: 'Error'}
           atom.workspace.open(filePath)
         runs ->
           shownItems = $('.tree-view .icon').length
@@ -164,7 +159,7 @@ describe 'Haskell tools marker manager', ->
         waitsForPromise ->
           atom.workspace.open filePath
         runs ->
-          markerManager.putMarker [problemLoc, 'Name not in scope: x']
+          markerManager.putMarker {location: problemLoc, message: 'Name not in scope: x', severity: 'Error'}
           shownItems = $('.tree-view .icon').length
           expect($('.ht-tree-error').length).toBe shownItems # should be 2
           markerManager.removeAllMarkersFromFiles [filePath]
@@ -180,8 +175,8 @@ describe 'Haskell tools marker manager', ->
             atom.workspace.open filePath2
         runs ->
           expect($('.tree-view .icon').length).toBe 3
-          markerManager.putMarker [problemLoc, 'Name not in scope: x']
-          markerManager.putMarker [problem2Loc, 'Name not in scope: x']
+          markerManager.putMarker {location: problemLoc, message: 'Name not in scope: x', severity: 'Error'}
+          markerManager.putMarker {location: problem2Loc, message: 'Name not in scope: x', severity: 'Error'}
           expect($('.ht-tree-error').length).toBe 3
           markerManager.removeAllMarkersFromFiles [filePath]
           expect($('.ht-tree-error').length).toBe 2

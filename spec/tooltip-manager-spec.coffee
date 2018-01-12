@@ -39,13 +39,13 @@ describe 'The tooltip manager', ->
 
     it "shows tooltip when the marker is hovered", ->
       $ => # Haskell tools depends on a completely loaded dom
-        markerManager.putMarker [problem1Loc, 'Name not in scope: x']
+        markerManager.putMarker {location: problem1Loc, message: 'Name not in scope: x', severity: 'Error'}
         $('.decoration.ht-comp-problem').mouseover()
         expect($('.ht-tooltip').length).toBe 1
 
     it "hides the tooltip after a few seconds of mouseout", ->
       $ => # Haskell tools depends on a completely loaded dom
-        markerManager.putMarker [problem1Loc, 'Name not in scope: x']
+        markerManager.putMarker {location: problem1Loc, message: 'Name not in scope: x', severity: 'Error'}
         $('.decoration.ht-comp-problem').mouseover()
         $('.decoration.ht-comp-problem').mouseout()
         jasmine.Clock.tick 1500
@@ -53,7 +53,7 @@ describe 'The tooltip manager', ->
 
     it "shows the tooltip again when the marker is hovered", ->
       $ => # Haskell tools depends on a completely loaded dom
-        markerManager.putMarker [problem1Loc, 'Name not in scope: x']
+        markerManager.putMarker {location: problem1Loc, message: 'Name not in scope: x', severity: 'Error'}
         $('.decoration.ht-comp-problem').mouseover()
         $('.decoration.ht-comp-problem').mouseout()
         jasmine.Clock.tick 500
@@ -63,7 +63,7 @@ describe 'The tooltip manager', ->
 
     it "shows the tooltip again when the tooltip is hovered", ->
       $ => # Haskell tools depends on a completely loaded dom
-        markerManager.putMarker [problem1Loc, 'Name not in scope: x']
+        markerManager.putMarker {location: problem1Loc, message: 'Name not in scope: x', severity: 'Error'}
         $('.decoration.ht-comp-problem').mouseover()
         $('.decoration.ht-comp-problem').mouseout()
         jasmine.Clock.tick 500
@@ -73,8 +73,8 @@ describe 'The tooltip manager', ->
 
     it "hides the tooltip immediately when another is hovered", ->
       $ => # Haskell tools depends on a completely loaded dom
-        markerManager.putMarker [problem1Loc, 'Name not in scope: x']
-        markerManager.putMarker [problem2Loc, 'Name not in scope: y']
+        markerManager.putMarker {location: problem1Loc, message: 'Name not in scope: x', severity: 'Error'}
+        markerManager.putMarker {location: problem1Loc, message: 'Name not in scope: x', severity: 'Error'}
         $('.decoration.ht-comp-problem').eq(0).mouseover()
         $('.decoration.ht-comp-problem').eq(1).mouseover()
         expect($('.ht-tooltip').eq(0)).toHaveClass('invisible')

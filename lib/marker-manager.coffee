@@ -61,7 +61,7 @@ module.exports = MarkerManager =
   # Registers the given error marker, shows if possible
   putMarker: ({location, message, severity}) ->
     if !location
-      atom.notifications.addError("error: #{text}", {dismissable : true})
+      atom.notifications.addError("error: #{message}", {dismissable : true})
       return
     file = location.file.replace /\\|\//g, path.sep
     editorsFor = @editors[file]
@@ -154,7 +154,7 @@ module.exports = MarkerManager =
     for file, markers of @markers
       err = markers.some (m) -> m.severity == "Error"
       warn = markers.some (m) -> m.severity == "Warning"
-      if markers.length > 0 
+      if markers.length > 0
         markedFiles.push [file, if err then "Error" else if warn then "Warning" else "Info"]
     $('.tree-view .icon[data-path]').each (i,elem) =>
       for [file, severity] in markedFiles
