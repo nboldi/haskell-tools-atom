@@ -7,6 +7,15 @@
         'command': 'haskell-tools:start-server'
       }
       {
+        'label': 'Query'
+        'submenu': [
+          {
+            'label': 'Highlight Extensions'
+            'command': 'haskell-tools:query:highlight-extensions'
+          }
+        ]
+      }
+      {
         'label': 'Refactor'
         'submenu': [
           {
@@ -43,17 +52,19 @@
           }
         ]
       }
-      'label': 'Refactor project'
-      'submenu': [
-        {
-          'label': 'Organize imports'
-          'command': 'haskell-tools:refactor:project-organize-imports'
-        }
-        {
-          'label': 'Organize extensions'
-          'command': 'haskell-tools:refactor:project-organize-extensions'
-        }
-      ]
+      {
+        'label': 'Refactor project'
+        'submenu': [
+          {
+            'label': 'Organize imports'
+            'command': 'haskell-tools:refactor:project-organize-imports'
+          }
+          {
+            'label': 'Organize extensions'
+            'command': 'haskell-tools:refactor:project-organize-extensions'
+          }
+        ]
+      }
       {
         'label': 'Stop Haskell Tools server'
         'command': 'haskell-tools:stop-server'
