@@ -32,6 +32,9 @@ module.exports = ClientManager =
       'haskell-tools:check-server': => @checkServer()
 
     @subscriptions.add atom.commands.add 'atom-workspace',
+      'haskell-tools:query:highlight-extensions', () => @query 'HighlightExtensions'
+
+    @subscriptions.add atom.commands.add 'atom-workspace',
       'haskell-tools:refactor:rename-definition', () => @refactor 'RenameDefinition'
 
     @subscriptions.add atom.commands.add 'atom-workspace',
@@ -125,6 +128,11 @@ module.exports = ClientManager =
           markerManager.removeAllMarkersFromFiles [data.loadedModulePath]
           tooltipManager.refresh()
           statusBar.loadedData data.loadedModuleName
+        when "QueryResult"
+          if data.queryType == "MarkerQuery"
+            markerManager.setErrorMarkers(data.queryResult)
+            tooltipManager.refresh()
+            statusBar.ready()
         when "LoadingModules" then statusBar.willLoadData data.modulesToLoad
         when "CompilationProblem"
           markerManager.setErrorMarkers(data.markers)
@@ -235,6 +243,39 @@ module.exports = ClientManager =
           , 'diffMode': false
           }
     statusBar.performRefactoring()
+
+  query: (queryName) ->
+    editor = atom.workspace.getActivePaneItem()
+    if not editor
+      return
+    if editor.isModified()
+      if atom.config.get("haskell-tools.save-before-refactor")
+        editor.save()
+        disp = editor.onDidSave () =>
+                 disp.dispose()
+                 tryAgain = () =>
+                   @query(queryName) # Try again after saving
+                 setTimeout tryAgain, 1000 # wait for the file system to inform Haskell-tools
+                                           # about the change.
+        return
+      else
+        atom.notifications.addError("Can't query unsaved files. Turn-on auto-saving to enable it.")
+        return
+    file = editor.buffer.file.path
+    range = editor.getSelectedBufferRange()
+
+    @performQuery(queryName, file, range, [])
+
+  performQuery: (query, file, range, params) ->
+    selection = "#{range.start.row + 1}:#{range.start.column + 1}-#{range.end.row + 1}:#{range.end.column + 1}"
+    @send { 'tag': 'PerformQuery'
+          , 'query': query
+          , 'modulePath': file
+          , 'editorSelection': selection
+          , 'details': params
+          , 'shutdownAfter': false
+          }
+    statusBar.performQuery()
 
   addPackages: (packages) ->
     if packages.length > 0

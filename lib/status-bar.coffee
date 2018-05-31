@@ -22,9 +22,17 @@ module.exports = StatusBar =
   disconnected: () ->
     @setStatus 'Disconnected'
 
+  # When a query is performed notify the user that it is being done.
+  ready: () ->
+    @setStatus 'Ready'
+
   # When packages are added display that the server is working on registering them.
   addPackages: () ->
     @setStatus 'Calculating'
+
+  # When a query is performed notify the user that it is being done.
+  performQuery: () ->
+    @setStatus 'Querying'
 
   # When a refactoring is performed notify the user that it is being done.
   performRefactoring: () ->
