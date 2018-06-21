@@ -21,8 +21,9 @@ module.exports = ExeLocator =
                  , userFolder + "\\AppData\\Roaming\\local\\bin\\" + exeName + ".exe"
                  ]
       when 'linux', 'darwin', 'openbsd', 'freebsd'
-        pathes = [ "~/.local/bin/" + exeName
-                 , "~/.cabal/bin/" + exeName
+        userFolder = process.env['USER']
+        pathes = [ "/home/" + userFolder + "/.local/bin/" + exeName
+                 , "/home/" + userFolder + "/.cabal/bin/" + exeName
                  ]
       else
         logger.error('Unknown OS: ' + os.platform() + '. Select ' + exeName + ' executable manually.')

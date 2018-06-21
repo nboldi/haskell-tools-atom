@@ -53,8 +53,8 @@ module.exports = ServerManager =
     cmdOptions = atom.config.get("haskell-tools.cmd-options")
     watchPath = atom.config.get("haskell-tools.watch-path")
 
-    if !daemonPath
-      atom.notifications.addError("Cannot start because the location of the daemon executable is not set up. Please go to Haskell/Settings and set it manually.")
+    if not daemonPath
+      atom.notifications.addError("Cannot start because the executable location is not set up.")
       return
 
     # set verbose mode and channel log messages to our log here
