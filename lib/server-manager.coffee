@@ -46,13 +46,16 @@ module.exports = ServerManager =
     if @running
       atom.notifications.addInfo("Cannot start because Haskell Tools is already running.")
       return
-    @running = true
 
     daemonPath = atom.config.get("haskell-tools.daemon-path")
     connectPort = atom.config.get("haskell-tools.connect-port")
     rtsOptions = atom.config.get("haskell-tools.rts-options")
     cmdOptions = atom.config.get("haskell-tools.cmd-options")
     watchPath = atom.config.get("haskell-tools.watch-path")
+
+    if !daemonPath
+      atom.notifications.addError("Cannot start because the location of the daemon executable is not set up. Please go to Haskell/Settings and set it manually.")
+      return
 
     # set verbose mode and channel log messages to our log here
 
@@ -65,8 +68,9 @@ module.exports = ServerManager =
     if rtsOptions.length > 0
       params.push '+RTS'
       params = params.concat rtsOptions
-    logger.log('Starting server with parameters: ' + params)
+    logger.log('Starting server with parameters: ' + daemonPath + ' ' + params)
     @subproc = process.spawn(daemonPath, params)
+    @running = true
     @subproc.stdout.on('data', (data) =>
       logger.log('Haskell Tools: ' + data)
     )
